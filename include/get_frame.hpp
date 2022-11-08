@@ -17,9 +17,6 @@
 namespace swq
 {
 
-    //路径是默认的json存储位置，留个宏定义方便更改
-    #define COMMON_JSON_FILEPATH "../asset/common.json"
-
     class GetFrame
     {
     public:

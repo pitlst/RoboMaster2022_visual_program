@@ -1,5 +1,6 @@
 #include "aimbot.hpp"
 #include "logger.hpp"
+#include "debug.hpp"
 
 #include <iostream>
 #include <cmath>
@@ -39,9 +40,9 @@ void GetArmor::load_json()
     json load_armor;
     json load_sentry;
     json load_camera;
-    load_armor.parse(get_file_str("../asset/armor_find.json"));
-    load_sentry.parse(get_file_str("../asset/sentry_find.json"));
-    load_camera.parse(get_file_str("../asset/common.json"));
+    load_armor.parse(get_file_str(PATH_ARMOR_FIND));
+    load_sentry.parse(get_file_str(PATH_SENTRY_FIND));
+    load_camera.parse(get_file_str(PATH_ECAMERA));
     if (mode != 0 && mode != 3)
     {
         mode = 0;

@@ -1,31 +1,40 @@
 #include <iostream>
 #include "logger.hpp"
+#include "debug.hpp"
 using namespace swq;
 
 logger::logger()
 {
-    #ifdef COMPILE_DEBUG
-    m_level = DEBUG;
-    #endif
-    #ifdef COMPILE_RELEASE
-    m_level = INFO;
-    #endif
-    #ifdef COMPILE_MINSIZEREL
-    m_level = FATAL;
+    #ifdef NO_LOG
+    m_level = NONE;
+    #else
+        #ifdef COMPILE_DEBUG
+        m_level = DEBUG;
+        #endif
+        #ifdef COMPILE_RELEASE
+        m_level = INFO;
+        #endif
+        #ifdef COMPILE_MINSIZEREL
+        m_level = FATAL;
+        #endif
     #endif
     open("");
 }
 
 logger::logger(const std::string & filepath)
 {
-    #ifdef COMPILE_DEBUG
-    m_level = DEBUG;
-    #endif
-    #ifdef COMPILE_RELEASE
-    m_level = INFO;
-    #endif
-    #ifdef COMPILE_MINSIZEREL
-    m_level = FATAL;
+    #ifdef NO_LOG
+    m_level = NONE;
+    #else
+        #ifdef COMPILE_DEBUG
+        m_level = DEBUG;
+        #endif
+        #ifdef COMPILE_RELEASE
+        m_level = INFO;
+        #endif
+        #ifdef COMPILE_MINSIZEREL
+        m_level = FATAL;
+        #endif
     #endif
     open(filepath);
 }
@@ -37,13 +46,17 @@ logger::~logger()
 
 logger & logger::instance()
 {
-	static logger m_instance(LOG_FILE_PATH);
+	static logger m_instance(PATH_LOG_FILE);
     return m_instance;
 }
 
 void logger::set_level(Level input_level)
 {
+    #ifdef NO_LOG
+    m_level = NONE;
+    #else
     m_level = input_level;
+    #endif
 }
 
 void logger::open(const std::string &filename)

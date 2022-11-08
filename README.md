@@ -135,3 +135,5 @@ asset存放其他的各项资源，包括测试用的视频，存放参数的jso
 6. 对于openvino的编译安装教程，是为了适应对应的第三方库，更快捷的方式是直接调用asset/openvino-GPU的安装脚本。
 
 7. 对于openvino调用GPU，需要更新驱动，已经将脚本单独放在了asset/openvino-GPU中，执行即可。
+
+8. 对于一些常用调试，写在了debug.hpp里，通过宏定义的方式管理

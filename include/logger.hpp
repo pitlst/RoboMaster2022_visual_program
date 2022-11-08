@@ -6,7 +6,6 @@
 #include <ctime>
 
 //定义一下日志文件所在地
-#define LOG_FILE_PATH "../asset/log.txt"
 
 #define log_debug(input) \
     swq::logger::instance().log(swq::logger::DEBUG, swq::logger::instance().format(input))
@@ -37,6 +36,7 @@ namespace swq
             WARN,
             ERROR,
             FATAL,
+            NONE
         };
 
         std::vector<std::string> label = 

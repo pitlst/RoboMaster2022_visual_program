@@ -18,7 +18,8 @@ if(NOT DEFINED CMAKE_BUILD_TYPE)
 endif()
 # 设置默认的openvino安装路径
 if(NOT DEFINED OpenVINO_DIR)
-    set(OpenVINO_DIR "/home/cheakf/openvino/runtime/cmake")
+    #这里的路径仅针对开发者的电脑 
+    set(OpenVINO_DIR "~/openvino/runtime/cmake")
 endif()
 # 指定头文件在对应的文件夹中寻找
 include_directories(include)

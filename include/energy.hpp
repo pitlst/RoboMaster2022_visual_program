@@ -28,6 +28,8 @@ namespace swq
     private:
         // openvino的初始化
         void openvino_init();
+        // 将cv::Mat转换为ov::Tensor
+        ov::Tensor trans_mat_to_tensor(cv::Mat & img);
 
         int debug = 0;
         int mode = 0;
@@ -44,6 +46,8 @@ namespace swq
         ov::InferRequest infer_request;
         //加载进来的模型,使用智能指针管理
         std::shared_ptr<ov::Model> model;
+        //创建的输入管道
+        ov::Output<const ov::Node> input_port;
         //存储最后的空间坐标
         struct armor_final
         {
@@ -74,7 +78,7 @@ namespace swq
         struct model_para
         {
             int input_n;
-            int intpu_c;
+            int input_c;
             int input_h;
             int input_w;
         };

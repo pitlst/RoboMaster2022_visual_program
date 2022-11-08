@@ -1,4 +1,5 @@
 #include "get_frame.hpp"
+#include "debug.hpp"
 #include <iostream>
 using namespace swq;
 
@@ -21,7 +22,7 @@ GetFrame::GetFrame(const std::string &source_path, int input_mode)
         video_debug_set = 2;
     }
     source = source_path;
-    read_json(COMMON_JSON_FILEPATH);
+    read_json(PATH_ECAMERA);
     StartCamera();
 }
 
