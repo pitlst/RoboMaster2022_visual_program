@@ -1,0 +1,71 @@
+{
+    "Aimbot":
+    {
+      "width":1440,
+      "图像宽度":"注意，该值与armor_find.json中[Connect_value][height]相关联，请同时修改",
+  
+      "height":864,
+      "图像高度":"注意，该值与armor_find.json中[Connect_value][height]相关联，请同时修改",
+  
+      "exposure_time":1300,
+      "曝光":"",
+  
+      "offsetX":0,
+      "水平偏移":"",
+  
+      "offsetY":212,
+      "垂直偏移":""
+  
+  
+    },
+  
+    "Energy_mac":
+    {
+      "width":1072,
+      "图像宽度":"",
+  
+      "height":1072,
+      "图像高度":"",
+  
+      "exposure_time":4000,
+      "曝光":"",
+  
+      "offsetX":176,
+      "水平偏移":"",
+  
+      "offsetY":4,
+      "垂直偏移":""
+  
+    },
+    "UARTSet":
+    {
+      "com":"/dev/ttyACM0",
+      "端口号":"",
+  
+      "bps":115200,
+      "波特率":"",
+  
+      "timeout":0,
+      "最大接收延时":""
+  
+    },
+  
+    "kalman_filter":{
+  
+      "delay_fps":10,
+      "装甲板闪烁等待时长":"单位为帧",
+  
+      "off_center_fps":130,
+      "偏心最大时长":"单位为帧",
+  
+      "conf":3,
+      "可维护的装甲板数目":""
+  
+    },
+
+    "capture":{
+    
+    }
+  
+  }
+  

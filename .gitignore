@@ -1,0 +1,3 @@
+build/*
+asset/log.txt
+asset/openvino-GPU
