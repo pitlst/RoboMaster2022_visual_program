@@ -35,7 +35,7 @@ FILE (GLOB 3rd_INCLUDE "3rd_part/include/*.h")
 # 找到需要的依赖
 find_package(OpenCV REQUIRED)
 find_package(OpenVINO REQUIRED)
-find_package(PythonInterp REQUIRED)
+find_package(Eigen3 REQUIRED)
 # 打印相关信息
 message(STATUS "项目名称 ${PROJECT_NAME}")
 message(STATUS "目标平台是 ${CMAKE_SYSTEM}")
@@ -48,7 +48,7 @@ if("${CMAKE_BUILD_TYPE}" MATCHES "Debug")
     message(STATUS "需要链接的动态库有 ${OpenCV_LIBS}${3rd_LIBS} 和 openvino::runtime")
 endif()
 # 导入头文件
-include_directories(${OpenCV_INCLUDE_DIRS})
+include_directories(${OpenCV_INCLUDE_DIRS} ${EIGEN3_INCLUDE_DIR})
 # 生成目标可执行文件
 add_executable(${PROJECT_NAME} ${DIR_SRCS} ${M_INCLUDES} ${3rd_INCLUDE})
 # 链接动态库

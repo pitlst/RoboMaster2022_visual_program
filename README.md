@@ -18,7 +18,7 @@ asset存放其他的各项资源，包括测试用的视频，存放参数的jso
 
 ## 部署方式
 
-本项目使用cmake组织项目，依赖于opencv和openvino
+本项目使用cmake组织项目，依赖于opencv,openvino和eigen3
 
 在这里介绍本项目开发时环境的搭建，用于作为演示。
 
@@ -26,11 +26,17 @@ asset存放其他的各项资源，包括测试用的视频，存放参数的jso
 
 理论上只要是ubuntu20.04就不存在编译器版本问题。
 
-首先是安装一些用到的系统应用
+首先安装eigen3
+
+> sudo apt-get install libeigen3-dev
+
+就可以了
+
+其次是安装一些用到的系统应用
 
 >sudo apt install g++ git zip make cmake wget python3-pip python3-numpy python3-venv ffmpeg -y
 
-其次安装opencv的编译依赖
+再其次安装opencv的编译依赖
 
 >sudo apt install cmake build-essential pkg-config libgtk2.0-dev libavcodec-dev libavformat-dev libswscale-dev libjpeg-dev libpng-dev -y
 

@@ -77,29 +77,68 @@ json::json(type input_t)
 
 json::operator bool()
 {
-    if (m_type != json_bool)
+    switch (m_type)
     {
+    case json_null:
+        return false;
+    case json_bool:
+        return m_value.m_bool;
+    case json_int:
+        return bool(m_value.m_int);
+    case json_double:
+        return bool(m_value.m_double);
+    case json_string:
+    case json_array:
+    case json_object:
         throw std::logic_error("type error: type is not bool");
+    default:
+        return false;
     }
-    return m_value.m_bool;
+    return false;
 }
 
 json::operator int()
 {
-    if (m_type != json_int)
+    switch (m_type)
     {
+    case json_null:
+        return 0;
+    case json_bool:
+        return int(m_value.m_bool);
+    case json_int:
+        return m_value.m_int;
+    case json_double:
+        return int(m_value.m_double);
+    case json_string:
+    case json_array:
+    case json_object:
         throw std::logic_error("type error: type is not int");
+    default:
+        return 0;
     }
-    return m_value.m_int;
+    return 0;
 }
 
 json::operator double()
 {
-    if (m_type != json_double)
+    switch (m_type)
     {
+    case json_null:
+        return 0.0;
+    case json_bool:
+        return double(m_value.m_bool);
+    case json_int:
+        return double(m_value.m_int);
+    case json_double:
+        return m_value.m_double;
+    case json_string:
+    case json_array:
+    case json_object:
         throw std::logic_error("type error: type is not double");
+    default:
+        return 0.0;
     }
-    return m_value.m_double;
+    return 0.0;
 }
 
 json::operator unsigned long long int()

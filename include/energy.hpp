@@ -10,7 +10,11 @@
 
 #include "openvino/openvino.hpp"
 
+#include <Eigen/Core>
+#include <Eigen/Dense>
+
 #include "json.hpp"
+#include "debug.hpp"
 
 namespace swq
 {
@@ -28,27 +32,39 @@ namespace swq
     private:
         // openvino的初始化
         void openvino_init();
-        // 将cv::Mat转换为ov::Tensor
-        ov::Tensor trans_mat_to_tensor(cv::Mat & img);
+        //获取模型参数
+        void model_para_init();
+        //将cv::Mat转换为ov::Tensor,包括图像相关的前处理,仅支持FP32精度
+        void trans_mat_to_tensor();
+        //将模型输出的tensor转换为Matrix,并按照对应形状组织起来,仅支持FP32精度
+        void trans_tansor_to_matrix(ov::Tensor & out_tensor);
+        //sigmoid函数c++实现
+        float sigmoid(float input_num);
 
+        //类的状态标志位
         int debug = 0;
         int mode = 0;
         int color = 0;
-        //图像中心像素数
+        //图像中心像素索引
         int img_xCenter;
         int img_yCenter;
         //处理的图像
         cv::Mat frame;
         cv::Mat mask;
-        //用于推演的openvino 运行时核心
-        ov::Core core;
+        //编译好,已加载到设备的模型
+        ov::CompiledModel compiled_model;
         //模型推演请求
         ov::InferRequest infer_request;
-        //加载进来的模型,使用智能指针管理
-        std::shared_ptr<ov::Model> model;
-        //创建的输入管道
+        //根据模型结构定义的输入输出管道,
         ov::Output<const ov::Node> input_port;
-        //存储最后的空间坐标
+        ov::Output<const ov::Node> output_port_stride8;
+        ov::Output<const ov::Node> output_port_stride16;
+        ov::Output<const ov::Node> output_port_stride32;
+        //输入模型的向量
+        ov::Tensor input_tensor;
+        //模型输出，用Eigen的动态数组存储
+        Eigen::Matrix<float, Eigen::Dynamic, Eigen::Dynamic> output_res;
+        //存储目标的空间坐标
         struct armor_final
         {
             long long int x;
@@ -75,14 +91,24 @@ namespace swq
             std::string model_path;
         };
         //模型相关的参数
+        struct out_shape
+        {
+            int n;
+            int c;
+            int h;
+            int w;
+        };
         struct model_para
         {
             int input_n;
             int input_c;
             int input_h;
             int input_w;
+            std::string type_str;
+            out_shape stride8;
+            out_shape stride16;
+            out_shape stride32;
         };
-
         armor_final armor;
         energy_para energy_par;
         model_para model_par;
