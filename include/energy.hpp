@@ -37,7 +37,7 @@ namespace swq
         //将cv::Mat转换为ov::Tensor,包括图像相关的前处理,仅支持FP32精度
         void trans_mat_to_tensor();
         //将模型输出的tensor转换为Matrix,并按照对应形状组织起来,仅支持FP32精度
-        void trans_tansor_to_matrix(ov::Tensor & out_tensor_8, ov::Tensor & out_tensor_16, ov::Tensor & out_tensor_32);
+        void trans_tansor_to_matrix(std::vector<ov::Tensor> out_tenosr);
         //sigmoid函数
         float sigmoid(float input_num);
 
@@ -116,8 +116,11 @@ namespace swq
         model_para model_par;
         
         //模型的anchor直接写死在这里了,如果需要更改训练程序中的anchor，请配合更改这里
-        const float anchors[3][6] = {{10.0, 13.0, 16.0, 30.0, 33.0, 23.0}, {30.0, 61.0, 62.0, 45.0, 59.0, 119.0},{116.0, 90.0, 156.0, 198.0, 373.0, 326.0}};
-        const float stride[3] = { 8.0, 16.0, 32.0 };
+        const float anchors[3][6] = {{4,5,  8,10,  13,16},{23,29,  43,55,  73,105},{146,217,  231,300,  335,433}};
+        //特征图尺寸
+        const float stride[3] = {8.0, 16.0, 32.0};
+        //模型类别
+        const int classes = 3;
 
 #ifdef COMPILE_DEBUG
     public:

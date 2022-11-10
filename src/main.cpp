@@ -41,7 +41,7 @@ int main()
     img = cv::imread("../asset/temp.bmp");
 
     start = clock(); 
-    auto s = 1;
+    auto s = 1000;
     for (size_t i = 0; i < s; i++)
     {
         temp.process(img);

@@ -91,8 +91,13 @@ std::vector<long long int> GetEnergyMac::process(cv::Mat &input_frame)
     auto output_tensor_0 = infer_request.get_tensor(output_port_stride8);
     auto output_tensor_1 = infer_request.get_tensor(output_port_stride16);
     auto output_tensor_2 = infer_request.get_tensor(output_port_stride32);
+    //由于模型的结构是16,32,8,所以这里把最后一个移到前面来,同时组织成容器，方便循环时调用
+    std::vector<ov::Tensor> output_tensor;
+    output_tensor.emplace_back(output_tensor_2);
+    output_tensor.emplace_back(output_tensor_0);
+    output_tensor.emplace_back(output_tensor_1);
     //把向量保存到矩阵里
-    trans_tansor_to_matrix(output_tensor_0, output_tensor_1, output_tensor_2);
+    trans_tansor_to_matrix(output_tensor);
     res_label = 0;
     std::vector<long long int> temp = {0,0,0};
     return temp;
@@ -181,38 +186,92 @@ void GetEnergyMac::trans_mat_to_tensor()
     input_tensor = ov::Tensor(input_port.get_element_type(), input_port.get_shape(), _data.get());
 }
 
-void GetEnergyMac::trans_tansor_to_matrix(ov::Tensor & out_tensor_8, ov::Tensor & out_tensor_16, ov::Tensor & out_tensor_32)
+void GetEnergyMac::trans_tansor_to_matrix(std::vector<ov::Tensor> out_tenosr)
 {
-    const float *input = out_tensor_8.data<const float>();
-    float ratioh = (float)frame.rows / this->inpHeight, ratiow = (float)frame.cols / this->inpWidth;
-    // for (size_t i = 0; i < out_tensor_8.get_shape()[1]*out_tensor_8.get_shape()[2]*out_tensor_8.get_shape()[3]; i++)
-    // {
-    //     input += 4;
-    //     //提取该图上有目标的概率,超过阈值再保存
-    //     if (sigmoid(*input) > MODEL_THRESHOLD)
-    //     {
-    //         input -= 4;
-    //         auto x = sigmoid(*input) * 2.0f -0.5f;
-    //         input++;
-    //         auto y = sigmoid(*input) * 2.0f -0.5f;
-    //         input++;
-    //         auto w = pow(sigmoid(*input) * 2.0f, 2.0f);
-    //         input++;
-    //         auto h = pow(sigmoid(*input) * 2.0f, 2.0f);
-    //         input++;
-    //         auto score = sigmoid(*input);
-    //         input++;
-    //         auto cls_0 = sigmoid(*input);
-    //         input++;
-    //         auto cls_1 = sigmoid(*input);
-    //         input++;
-    //         auto cls_2 = sigmoid(*input);
-    //         input++;
-    //         auto angle = sigmoid(*input);
-    //         input++;
-    //         res_label++;
-    //     }
-    // }
+    
+    float ratioh = float(frame.rows)/model_par.input_n;
+    float ratiow = float(frame.cols)/model_par.input_w;
+    //遍历尺度
+    for (auto n = 0; n < 3; n++)   
+    {
+        const float *input = out_tenosr[n].data<const float>();
+        int num_grid_x = model_par.input_n/stride[n];
+        int num_grid_y = model_par.input_w/stride[n];
+        int area = num_grid_x * num_grid_y;
+        //遍历anchor
+        for (auto q = 0; q < 3; q++)
+        {
+            const float anchor_w = anchors[n][q * 2];
+            const float anchor_h = anchors[n][q * 2 + 1];
+            input += q*area*(classes + 6);
+            //遍历每一个生成框
+            for (auto i = 0; i < num_grid_y; i++)
+            {
+                for (auto j = 0; j < num_grid_x; j++)
+                {
+                    input += 4;
+                    auto score = sigmoid(*input);
+                    input++;
+                    //提取该图上有目标的概率,超过阈值再保存
+                    if (score > MODEL_THRESHOLD)
+                    {
+                        float max_class_score = 0;
+                        int class_id = 0;
+                        //获取类型
+                        for (auto c = 0; c < classes; c++)
+                        {
+                            auto class_socre = sigmoid(*input);
+                            input++;
+                            if (class_socre > max_class_score)
+                            {
+                                max_class_score = class_socre;
+                                class_id = c;
+                            }
+                        }
+                        //转换输出的坐标并保存
+                        if (max_class_score > CLASSES_THRESHOLD)
+                        {
+                            auto angle = sigmoid(*input);
+                            //指针跳回向量的开头
+                            input -= (classes + 6);
+                            auto temp_x = sigmoid(*input);
+                            input++;
+                            auto temp_y = sigmoid(*input);
+                            input++;
+                            auto temp_w = sigmoid(*input);
+                            input++;
+                            auto temp_h = sigmoid(*input);
+                            input++;
+
+                            float cx = (temp_x * 2.f - 0.5f + j) * stride[n]; 
+                            float cy = (temp_y * 2.f - 0.5f + i) * stride[n]; 
+                            float w = powf(temp_w * 2.f, 2.f) * anchor_w; 
+                            float h = powf(temp_h * 2.f, 2.f) * anchor_h; 
+                            
+                            //坐标还原到原图上
+                            int rel_x = cx*ratiow;
+                            int rel_y = cy*ratioh;   
+                            int rel_w = w*ratiow;
+                            int rel_h = h*ratioh;
+                            //置信度、类别、框的x、框的中心y、框的长w、框的宽h(这四个都相对于图像整体)、框的角度angle
+                            output_res(res_label,0) = score;
+                            output_res(res_label,1) = class_id;
+                            output_res(res_label,2) = rel_x;
+                            output_res(res_label,3) = rel_y;
+                            output_res(res_label,4) = rel_w;
+                            output_res(res_label,5) = rel_h;
+                            output_res(res_label,6) = angle;
+                            res_label++;
+                        }   
+                        //指针跳到下一个向量的开头
+                        input += (classes + 2);
+                    }
+                    //指针跳到下一个向量的开头
+                    input += (classes + 1);
+                }
+            }
+        }
+    }
 }
 
 float GetEnergyMac::sigmoid(float input_num)

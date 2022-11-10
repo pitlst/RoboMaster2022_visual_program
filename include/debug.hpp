@@ -14,8 +14,11 @@
 //模型文件路径
 #define PATH_MODEL_FILE "../asset/model/bestyao_13_416.xml"
 
-//这是模型的置信度阈值
+//nms参数
+//这是模型的目标置信度阈值
 #define MODEL_THRESHOLD 0.
+//这是模型的类别置信度阈值
+#define CLASSES_THRESHOLD 0.
 
 //开启此宏定义关闭所有日志输出
 //#define NO_LOG
