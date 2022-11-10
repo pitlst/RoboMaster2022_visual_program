@@ -1,5 +1,6 @@
 #include <iostream>
 #include <thread>
+#include <ctime>
 
 #include "get_frame.hpp"
 #include "aimbot.hpp"
@@ -34,10 +35,20 @@ int main()
     std::cout << ov::get_openvino_version() << std::endl;
     swq::GetEnergyMac temp;
 
+    clock_t start,end;
+
     cv::Mat img;
     img = cv::imread("../asset/temp.bmp");
 
-    temp.process(img);
+    start = clock(); 
+    auto s = 1;
+    for (size_t i = 0; i < s; i++)
+    {
+        temp.process(img);
+    }
+    end = clock();
+
+    std::cout<<"平均帧 = "<<CLOCKS_PER_SEC/(double(end-start)/s)<<"fps"<<std::endl;
 
     log_debug("程序结束");
     return 0;

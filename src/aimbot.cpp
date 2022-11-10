@@ -40,9 +40,9 @@ void GetArmor::load_json()
     json load_armor;
     json load_sentry;
     json load_camera;
-    load_armor.parse(get_file_str(PATH_ARMOR_FIND));
-    load_sentry.parse(get_file_str(PATH_SENTRY_FIND));
-    load_camera.parse(get_file_str(PATH_ECAMERA));
+    load_armor.parse(get_file_str(PATH_ARMOR_JSON));
+    load_sentry.parse(get_file_str(PATH_SENTRY_JSON));
+    load_camera.parse(get_file_str(PATH_CAMERA_JSON));
     if (mode != 0 && mode != 3)
     {
         mode = 0;

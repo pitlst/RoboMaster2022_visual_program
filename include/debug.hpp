@@ -1,10 +1,12 @@
 //本头文件用于定义常用宏,方便功能测试
+//注意，更改本文件后需要重新编译后运行
 
 //配置参数文件路径
-#define PATH_ENERGY_FIND "../asset/json/energy_find.json"
-#define PATH_ARMOR_FIND "../asset/json/armor_find.json"
-#define PATH_SENTRY_FIND "../asset/json/sentry_find.json"
-#define PATH_ECAMERA "../asset/json/common.json"
+#define PATH_ENERGY_JSON "../asset/json/energy.json"
+#define PATH_ARMOR_JSON "../asset/json/armor.json"
+#define PATH_SENTRY_JSON "../asset/json/sentry.json"
+#define PATH_CAMERA_JSON "../asset/json/camera.json"
+#define PATH_MODEL_JSON "../asset/json/camera.json"
 
 //日志文件路径
 #define PATH_LOG_FILE "../asset/log.txt"
@@ -13,7 +15,7 @@
 #define PATH_MODEL_FILE "../asset/model/bestyao_13_416.xml"
 
 //这是模型的置信度阈值
-#define MODEL_THRESHOLD 0.5
+#define MODEL_THRESHOLD 0.
 
 //开启此宏定义关闭所有日志输出
 //#define NO_LOG

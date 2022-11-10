@@ -22,7 +22,7 @@ GetFrame::GetFrame(const std::string &source_path, int input_mode)
         video_debug_set = 2;
     }
     source = source_path;
-    read_json(PATH_ECAMERA);
+    read_json(PATH_CAMERA_JSON);
     StartCamera();
 }
 
@@ -256,13 +256,13 @@ void GetFrame::Convert2Mat()
             // Mat像素排列格式为BGR，需要转换
             RGB2BGR(pData, stImageInfo.nWidth, stImageInfo.nHeight);
             frame = cv::Mat(stImageInfo.nHeight, stImageInfo.nWidth, CV_8UC3, pData);
+            cv::cvtColor(frame,frame,cv::COLOR_BGR2RGB);
         }
         else if(PixelType_Gvsp_BayerRG8 == stImageInfo.enPixelType)      // BayerRG8类型
         {
             //先转换成opencv的格式
             frame = cv::Mat(stImageInfo.nHeight, stImageInfo.nWidth, CV_8UC1, pData);
-            cv::Mat temp = frame;
-            cv::cvtColor(temp,frame,cv::COLOR_BayerRG2BGR);
+            cv::cvtColor(frame,frame,cv::COLOR_BayerRG2RGB);
         }
         else
         {
@@ -275,7 +275,7 @@ void GetFrame::Convert2Mat()
     }
 }
 
-void GetFrame::RGB2BGR( unsigned char* pRgbData, unsigned int nWidth, unsigned int nHeight)
+void GetFrame::RGB2BGR(unsigned char* pRgbData, unsigned int nWidth, unsigned int nHeight)
 {
     if (nullptr == pRgbData )
     {
