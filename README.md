@@ -26,12 +26,6 @@ asset存放其他的各项资源，包括测试用的视频，存放参数的jso
 
 理论上只要是ubuntu20.04就不存在编译器版本问题。
 
-首先安装eigen3
-
-> sudo apt-get install libeigen3-dev
-
-就可以了
-
 其次是安装一些用到的系统应用
 
 >sudo apt install g++ git zip make cmake wget python3-pip python3-numpy python3-venv ffmpeg -y

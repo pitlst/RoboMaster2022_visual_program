@@ -10,9 +10,6 @@
 
 #include "openvino/openvino.hpp"
 
-#include <Eigen/Core>
-#include <Eigen/Dense>
-
 #include "json.hpp"
 #include "debug.hpp"
 
@@ -40,17 +37,15 @@ namespace swq
         void trans_tansor_to_matrix(std::vector<ov::Tensor> out_tenosr);
         //sigmoid函数
         float sigmoid(float input_num);
+        //筛选中心
+        void center_filter();
 
         //类的状态标志位
         int debug = 0;
-        int mode = 0;
         int color = 0;
-        //图像中心像素索引
-        int img_xCenter;
-        int img_yCenter;
+        int mode = SMALL_ENERGY_BUFFER;
         //处理的图像
         cv::Mat frame;
-        cv::Mat mask;
         //编译好,已加载到设备的模型
         ov::CompiledModel compiled_model;
         //模型推演请求
@@ -64,7 +59,7 @@ namespace swq
         ov::Tensor input_tensor;
         //模型输出，用Eigen的动态数组存储
         Eigen::Matrix<float, Eigen::Dynamic, Eigen::Dynamic> output_res;
-        //标志位，用于标记数组存储数据的索引
+        //标志位，用于标记数组数组实际存储数据的多少
         int res_label = 0;
         //存储目标的空间坐标
         struct armor_final

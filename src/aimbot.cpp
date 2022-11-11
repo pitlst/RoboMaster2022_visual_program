@@ -13,11 +13,10 @@ GetArmor::GetArmor()
     realCenter_list = new std::vector<std::vector<float>>();
 }
 
-GetArmor::GetArmor(int input_debug, int input_color, int input_mode)
+GetArmor::GetArmor(int input_debug, int input_color)
 {
     debug = input_debug;
     color = input_color;
-    mode = input_mode;
     lightBarList = new std::vector<cv::RotatedRect>();
     realCenter_list = new std::vector<std::vector<float>>();
 }
@@ -28,147 +27,80 @@ GetArmor::~GetArmor()
     delete realCenter_list;
 }
 
-void GetArmor::set(int input_debug, int input_color, int input_mode)
+void GetArmor::set(int input_debug, int input_color)
 {
     debug = input_debug;
     color = input_color;
-    mode = input_mode;
 }
 
 void GetArmor::load_json()
 {
     json load_armor;
-    json load_sentry;
     json load_camera;
+
     load_armor.parse(get_file_str(PATH_ARMOR_JSON));
-    load_sentry.parse(get_file_str(PATH_SENTRY_JSON));
     load_camera.parse(get_file_str(PATH_CAMERA_JSON));
-    if (mode != 0 && mode != 3)
+    
+    if (color == 0)
     {
-        mode = 0;
+        load_par.lowHue = load_armor["ImageProcess_red"]["hsvPara_low"][0];
+        load_par.lowSat = load_armor["ImageProcess_red"]["hsvPara_low"][1];
+        load_par.lowVal = load_armor["ImageProcess_red"]["hsvPara_low"][2];
+        load_par.highHue = load_armor["ImageProcess_red"]["hsvPara_high"][0];
+        load_par.highSat = load_armor["ImageProcess_red"]["hsvPara_high"][1];
+        load_par.highVal = load_armor["ImageProcess_red"]["hsvPara_high"][2];
     }
-    if (mode == 0)
+    else if (color == 1)
     {
-        if (color == 0)
-        {
-            load_par.lowHue = load_armor["ImageProcess_red"]["hsvPara_low"][0];
-            load_par.lowSat = load_armor["ImageProcess_red"]["hsvPara_low"][1];
-            load_par.lowVal = load_armor["ImageProcess_red"]["hsvPara_low"][2];
-            load_par.highHue = load_armor["ImageProcess_red"]["hsvPara_high"][0];
-            load_par.highSat = load_armor["ImageProcess_red"]["hsvPara_high"][1];
-            load_par.highVal = load_armor["ImageProcess_red"]["hsvPara_high"][2];
-        }
-        else if (color == 1)
-        {
-            load_par.lowHue = load_armor["ImageProcess_blue"]["hsvPara_low"][0];
-            load_par.lowSat = load_armor["ImageProcess_blue"]["hsvPara_low"][1];
-            load_par.lowVal = load_armor["ImageProcess_blue"]["hsvPara_low"][2];
-            load_par.highHue = load_armor["ImageProcess_blue"]["hsvPara_high"][0];
-            load_par.highSat = load_armor["ImageProcess_blue"]["hsvPara_high"][1];
-            load_par.highVal = load_armor["ImageProcess_blue"]["hsvPara_high"][2];
-        }
-        else
-        {
-            log_error("unknow color num");
-            load_par.lowHue = -1;
-            load_par.lowSat = -1;
-            load_par.lowVal = -1;
-            load_par.highHue = -1;
-            load_par.highSat = -1;
-            load_par.highVal = -1;
-        }
-        load_par.minlighterarea = load_armor["ArmorFind"]["minlighterarea"];
-        load_par.maxlighterarea = load_armor["ArmorFind"]["maxlighterarea"];
-        load_par.minlighterProp = load_armor["ArmorFind"]["minlighterProp"];
-        load_par.minAngleError = load_armor["ArmorFind"]["minAngleError"];
-        load_par.maxAngleError = load_armor["ArmorFind"]["maxAngleError"];
-
-        load_par.minarealongRatio = load_armor["ArmorFind"]["minarealongRatio"];
-        load_par.maxarealongRatio = load_armor["ArmorFind"]["maxarealongRatio"];
-        load_par.lightBarAreaDiff = load_armor["ArmorFind"]["lightBarAreaDiff"];
-        load_par.armorAngleMin = load_armor["ArmorFind"]["armorAngleMin"];
-        load_par.minarmorArea = load_armor["ArmorFind"]["minarmorArea"];
-        load_par.maxarmorArea = load_armor["ArmorFind"]["maxarmorArea"];
-        load_par.minarmorProp = load_armor["ArmorFind"]["minarmorProp"];
-        load_par.maxarmorProp = load_armor["ArmorFind"]["maxarmorProp"];
-        load_par.minBigarmorProp = load_armor["ArmorFind"]["minBigarmorProp"];
-        load_par.maxBigarmorProp = load_armor["ArmorFind"]["maxBigarmorProp"];
-        load_par.angleDiff_near = load_armor["ArmorFind"]["angleDiff_near"];
-        load_par.angleDiff_far = load_armor["ArmorFind"]["angleDiff_far"];
-        load_par.minareawidthRatio = load_armor["ArmorFind"]["minareawidthRatio"];
-        load_par.maxareawidthRatio = load_armor["ArmorFind"]["maxareawidthRatio"];
-        load_par.minareaRatio = load_armor["ArmorFind"]["minareaRatio"];
-        load_par.maxareaRatio = load_armor["ArmorFind"]["maxareaRatio"];
-        load_par.area_limit = load_armor["ArmorFind"]["area_limit"];
-        load_par.xcenterdismax = load_armor["ArmorFind"]["xcenterdismax"];
-        load_par.ylengthmin = load_armor["ArmorFind"]["ylengthmin"];
-        load_par.ylengcenterRatio = load_armor["ArmorFind"]["ylengcenterRatio"];
-        load_par.yixaingangleDiff_near = load_armor["ArmorFind"]["yixaingangleDiff_near"];
-        load_par.yixaingangleDiff_far = load_armor["ArmorFind"]["yixaingangleDiff_far"];
-
-        load_par.kh = load_armor["ArmorFind"]["kh"];
+        load_par.lowHue = load_armor["ImageProcess_blue"]["hsvPara_low"][0];
+        load_par.lowSat = load_armor["ImageProcess_blue"]["hsvPara_low"][1];
+        load_par.lowVal = load_armor["ImageProcess_blue"]["hsvPara_low"][2];
+        load_par.highHue = load_armor["ImageProcess_blue"]["hsvPara_high"][0];
+        load_par.highSat = load_armor["ImageProcess_blue"]["hsvPara_high"][1];
+        load_par.highVal = load_armor["ImageProcess_blue"]["hsvPara_high"][2];
     }
-    else if (mode == 3)
+    else
     {
-        if (color == 0)
-        {
-            load_par.lowHue = load_sentry["ImageProcess_red"]["hsvPara_low"][0];
-            load_par.lowSat = load_sentry["ImageProcess_red"]["hsvPara_low"][1];
-            load_par.lowVal = load_sentry["ImageProcess_red"]["hsvPara_low"][2];
-            load_par.highHue = load_sentry["ImageProcess_red"]["hsvPara_high"][0];
-            load_par.highSat = load_sentry["ImageProcess_red"]["hsvPara_high"][1];
-            load_par.highVal = load_sentry["ImageProcess_red"]["hsvPara_high"][2];
-        }
-        else if (color == 1)
-        {
-            load_par.lowHue = load_sentry["ImageProcess_blue"]["hsvPara_low"][0];
-            load_par.lowSat = load_sentry["ImageProcess_blue"]["hsvPara_low"][1];
-            load_par.lowVal = load_sentry["ImageProcess_blue"]["hsvPara_low"][2];
-            load_par.highHue = load_sentry["ImageProcess_blue"]["hsvPara_high"][0];
-            load_par.highSat = load_sentry["ImageProcess_blue"]["hsvPara_high"][1];
-            load_par.highVal = load_sentry["ImageProcess_blue"]["hsvPara_high"][2];
-        }
-        else
-        {
-            log_error("unknow color num");
-            load_par.lowHue = -1;
-            load_par.lowSat = -1;
-            load_par.lowVal = -1;
-            load_par.highHue = -1;
-            load_par.highSat = -1;
-            load_par.highVal = -1;
-        }
-        load_par.minlighterarea = load_sentry["ArmorFind"]["minlighterarea"];
-        load_par.maxlighterarea = load_sentry["ArmorFind"]["maxlighterarea"];
-        load_par.minlighterProp = load_sentry["ArmorFind"]["minlighterProp"];
-        load_par.minAngleError = load_sentry["ArmorFind"]["minAngleError"];
-        load_par.maxAngleError = load_sentry["ArmorFind"]["maxAngleError"];
-
-        load_par.minarealongRatio = load_sentry["ArmorFind"]["minarealongRatio"];
-        load_par.maxarealongRatio = load_sentry["ArmorFind"]["maxarealongRatio"];
-        load_par.lightBarAreaDiff = load_sentry["ArmorFind"]["lightBarAreaDiff"];
-        load_par.armorAngleMin = load_sentry["ArmorFind"]["armorAngleMin"];
-        load_par.minarmorArea = load_sentry["ArmorFind"]["minarmorArea"];
-        load_par.maxarmorArea = load_sentry["ArmorFind"]["maxarmorArea"];
-        load_par.minarmorProp = load_sentry["ArmorFind"]["minarmorProp"];
-        load_par.maxarmorProp = load_sentry["ArmorFind"]["maxarmorProp"];
-        load_par.minBigarmorProp = load_sentry["ArmorFind"]["minBigarmorPr;op"];
-        load_par.maxBigarmorProp = load_sentry["ArmorFind"]["maxBigarmorProp"];
-        load_par.angleDiff_near = load_sentry["ArmorFind"]["angleDiff_near"];
-        load_par.angleDiff_far = load_sentry["ArmorFind"]["angleDiff_far"];
-        load_par.minareawidthRatio = load_sentry["ArmorFind"]["minareawidthRatio"];
-        load_par.maxareawidthRatio = load_sentry["ArmorFind"]["maxareawidthRatio"];
-        load_par.minareaRatio = load_sentry["ArmorFind"]["minareaRatio"];
-        load_par.maxareaRatio = load_sentry["ArmorFind"]["maxareaRatio"];
-        load_par.area_limit = load_sentry["ArmorFind"]["area_limit"];
-        load_par.xcenterdismax = load_sentry["ArmorFind"]["xcenterdismax"];
-        load_par.ylengthmin = load_sentry["ArmorFind"]["ylengthmin"];
-        load_par.ylengcenterRatio = load_sentry["ArmorFind"]["ylengcenterRatio"];
-        load_par.yixaingangleDiff_near = load_sentry["ArmorFind"]["yixaingangleDiff_near"];
-        load_par.yixaingangleDiff_far = load_sentry["ArmorFind"]["yixaingangleDiff_far"];
-
-        load_par.kh = load_sentry["ArmorFind"]["yixaingangleDiff_far"];
+        log_error("unknow color num");
+        load_par.lowHue = -1;
+        load_par.lowSat = -1;
+        load_par.lowVal = -1;
+        load_par.highHue = -1;
+        load_par.highSat = -1;
+        load_par.highVal = -1;
     }
+
+    load_par.minlighterarea = load_armor["ArmorFind"]["minlighterarea"];
+    load_par.maxlighterarea = load_armor["ArmorFind"]["maxlighterarea"];
+    load_par.minlighterProp = load_armor["ArmorFind"]["minlighterProp"];
+    load_par.minAngleError = load_armor["ArmorFind"]["minAngleError"];
+    load_par.maxAngleError = load_armor["ArmorFind"]["maxAngleError"];
+
+    load_par.minarealongRatio = load_armor["ArmorFind"]["minarealongRatio"];
+    load_par.maxarealongRatio = load_armor["ArmorFind"]["maxarealongRatio"];
+    load_par.lightBarAreaDiff = load_armor["ArmorFind"]["lightBarAreaDiff"];
+    load_par.armorAngleMin = load_armor["ArmorFind"]["armorAngleMin"];
+    load_par.minarmorArea = load_armor["ArmorFind"]["minarmorArea"];
+    load_par.maxarmorArea = load_armor["ArmorFind"]["maxarmorArea"];
+    load_par.minarmorProp = load_armor["ArmorFind"]["minarmorProp"];
+    load_par.maxarmorProp = load_armor["ArmorFind"]["maxarmorProp"];
+    load_par.minBigarmorProp = load_armor["ArmorFind"]["minBigarmorProp"];
+    load_par.maxBigarmorProp = load_armor["ArmorFind"]["maxBigarmorProp"];
+    load_par.angleDiff_near = load_armor["ArmorFind"]["angleDiff_near"];
+    load_par.angleDiff_far = load_armor["ArmorFind"]["angleDiff_far"];
+    load_par.minareawidthRatio = load_armor["ArmorFind"]["minareawidthRatio"];
+    load_par.maxareawidthRatio = load_armor["ArmorFind"]["maxareawidthRatio"];
+    load_par.minareaRatio = load_armor["ArmorFind"]["minareaRatio"];
+    load_par.maxareaRatio = load_armor["ArmorFind"]["maxareaRatio"];
+    load_par.area_limit = load_armor["ArmorFind"]["area_limit"];
+    load_par.xcenterdismax = load_armor["ArmorFind"]["xcenterdismax"];
+    load_par.ylengthmin = load_armor["ArmorFind"]["ylengthmin"];
+    load_par.ylengcenterRatio = load_armor["ArmorFind"]["ylengcenterRatio"];
+    load_par.yixaingangleDiff_near = load_armor["ArmorFind"]["yixaingangleDiff_near"];
+    load_par.yixaingangleDiff_far = load_armor["ArmorFind"]["yixaingangleDiff_far"];
+
+    load_par.kh = load_armor["ArmorFind"]["kh"];
+
     img_xCenter = load_camera["Aimbot"]["width"].Int() / 2;
     img_yCenter = load_camera["Aimbot"]["height"].Int() / 2;
     load_armor.clear();

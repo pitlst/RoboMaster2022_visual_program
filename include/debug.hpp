@@ -1,24 +1,36 @@
 //本头文件用于定义常用宏,方便功能测试
 //注意，更改本文件后需要重新编译后运行
 
-//配置参数文件路径
+//能量机关配置参数文件路径
 #define PATH_ENERGY_JSON "../asset/json/energy.json"
+//自瞄模式配置参数文件路径
 #define PATH_ARMOR_JSON "../asset/json/armor.json"
-#define PATH_SENTRY_JSON "../asset/json/sentry.json"
+//能量机关配置参数文件路径
 #define PATH_CAMERA_JSON "../asset/json/camera.json"
+//能量机关配置参数文件路径
 #define PATH_MODEL_JSON "../asset/json/camera.json"
-
 //日志文件路径
 #define PATH_LOG_FILE "../asset/log.txt"
-
 //模型文件路径
 #define PATH_MODEL_FILE "../asset/model/bestyao_13_416.xml"
+//能量机关模式参数-小符
+#define SMALL_ENERGY_BUFFER 8001
+//能量机关模式参数-大符
+#define BIG_ENERGY_BUFFER 8002
 
 //nms参数
 //这是模型的目标置信度阈值
 #define MODEL_THRESHOLD 0.
 //这是模型的类别置信度阈值
 #define CLASSES_THRESHOLD 0.
+
+//此宏定义用于决定能量机关中心筛选方式
+//0为只根据深度学习
+//1为只根据传统视觉
+//2为对传统center与深度学习center取交集，此方案应用于模型有大概率误识别的情况
+//3为深度学习丢失后用传统视觉弥补，此情况应用于模型有大概率漏识别的情况
+#define CENTER_FILTER_MODE 0
+
 
 //开启此宏定义关闭所有日志输出
 //#define NO_LOG
@@ -41,3 +53,5 @@
 
 //开启此宏定义启用GPU推理,不启用默认使用CPU
 #define GPU_INFER
+
+

@@ -20,10 +20,10 @@ namespace swq
     {
     public:
         GetArmor();
-        GetArmor(int input_debug, int input_color, int input_mode);
+        GetArmor(int input_debug, int input_color);
         ~GetArmor();
 
-        void set(int input_debug, int input_color, int input_mode);
+        void set(int input_debug, int input_color);
         void load_json();
         std::vector<long long int> process(cv::Mat &input_frame);
 
@@ -40,7 +40,6 @@ namespace swq
         float EuclideanDistance(float x0, float y0, float x1, float y1);
 
         int debug = 0;
-        int mode = 0;
         int color = 0;
         //图像中心像素数
         int img_xCenter;

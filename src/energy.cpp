@@ -99,8 +99,18 @@ std::vector<long long int> GetEnergyMac::process(cv::Mat &input_frame)
     //把向量保存到矩阵里
     trans_tansor_to_matrix(output_tensor);
     res_label = 0;
-    std::vector<long long int> temp = {0,0,0};
+    std::vector<long long int> temp = {0, 0, 0};
     return temp;
+}
+
+void GetEnergyMac::center_filter()
+{
+#ifdef CENTER_FILTER_MODE 0
+    
+#elif CENTER_FILTER_MODE 1
+#elif CENTER_FILTER_MODE 2
+#elif CENTER_FILTER_MODE 3
+#endif
 }
 
 void GetEnergyMac::openvino_init()
@@ -155,13 +165,10 @@ void GetEnergyMac::model_para_init()
     //如果模型不变，这个矩阵的形状可以写死
     //矩阵的纵向长度7的含义为：
     //置信度(图像目标*类别置信度)、类别、框的中心x、框的中心y、框的长w、框的宽h(这四个都相对于图像整体)、框的角度angle
-    output_res.resize(model_par.stride8.n*model_par.stride8.c*model_par.stride8.w +\
-                    model_par.stride16.n*model_par.stride16.c*model_par.stride16.w + \
-                    model_par.stride32.n*model_par.stride32.c*model_par.stride32.w ,\
-
-                    7);
-
-    
+    output_res.resize(model_par.stride8.n * model_par.stride8.c * model_par.stride8.w +
+                          model_par.stride16.n * model_par.stride16.c * model_par.stride16.w +
+                          model_par.stride32.n * model_par.stride32.c * model_par.stride32.w,
+                      7);
 }
 
 void GetEnergyMac::trans_mat_to_tensor()
@@ -180,30 +187,30 @@ void GetEnergyMac::trans_mat_to_tensor()
     }
     size_t size = width * height * temp.channels();
     std::shared_ptr<float> _data;
-    _data.reset(new float[size], std::default_delete<float[]>());//按照图像大小初始化指向的位置
+    _data.reset(new float[size], std::default_delete<float[]>()); //按照图像大小初始化指向的位置
     cv::Mat resized(cv::Size(width, height), temp.type(), _data.get());
-    cv::resize(temp, resized, cv::Size(width, height));          //这里借用opencv自己的构造，让数据填充到_data指向的的位置
+    cv::resize(temp, resized, cv::Size(width, height)); //这里借用opencv自己的构造，让数据填充到_data指向的的位置
     input_tensor = ov::Tensor(input_port.get_element_type(), input_port.get_shape(), _data.get());
 }
 
 void GetEnergyMac::trans_tansor_to_matrix(std::vector<ov::Tensor> out_tenosr)
 {
-    
-    float ratioh = float(frame.rows)/model_par.input_n;
-    float ratiow = float(frame.cols)/model_par.input_w;
+
+    float ratioh = float(frame.rows) / model_par.input_n;
+    float ratiow = float(frame.cols) / model_par.input_w;
     //遍历尺度
-    for (auto n = 0; n < 3; n++)   
+    for (auto n = 0; n < 3; n++)
     {
         const float *input = out_tenosr[n].data<const float>();
-        int num_grid_x = model_par.input_n/stride[n];
-        int num_grid_y = model_par.input_w/stride[n];
+        int num_grid_x = model_par.input_n / stride[n];
+        int num_grid_y = model_par.input_w / stride[n];
         int area = num_grid_x * num_grid_y;
         //遍历anchor
         for (auto q = 0; q < 3; q++)
         {
             const float anchor_w = anchors[n][q * 2];
             const float anchor_h = anchors[n][q * 2 + 1];
-            input += q*area*(classes + 6);
+            input += q * area * (classes + 6);
             //遍历每一个生成框
             for (auto i = 0; i < num_grid_y; i++)
             {
@@ -243,26 +250,26 @@ void GetEnergyMac::trans_tansor_to_matrix(std::vector<ov::Tensor> out_tenosr)
                             auto temp_h = sigmoid(*input);
                             input++;
 
-                            float cx = (temp_x * 2.f - 0.5f + j) * stride[n]; 
-                            float cy = (temp_y * 2.f - 0.5f + i) * stride[n]; 
-                            float w = powf(temp_w * 2.f, 2.f) * anchor_w; 
-                            float h = powf(temp_h * 2.f, 2.f) * anchor_h; 
-                            
+                            float cx = (temp_x * 2.f - 0.5f + j) * stride[n];
+                            float cy = (temp_y * 2.f - 0.5f + i) * stride[n];
+                            float w = powf(temp_w * 2.f, 2.f) * anchor_w;
+                            float h = powf(temp_h * 2.f, 2.f) * anchor_h;
+
                             //坐标还原到原图上
-                            int rel_x = cx*ratiow;
-                            int rel_y = cy*ratioh;   
-                            int rel_w = w*ratiow;
-                            int rel_h = h*ratioh;
+                            int rel_x = cx * ratiow;
+                            int rel_y = cy * ratioh;
+                            int rel_w = w * ratiow;
+                            int rel_h = h * ratioh;
                             //置信度、类别、框的x、框的中心y、框的长w、框的宽h(这四个都相对于图像整体)、框的角度angle
-                            output_res(res_label,0) = score;
-                            output_res(res_label,1) = class_id;
-                            output_res(res_label,2) = rel_x;
-                            output_res(res_label,3) = rel_y;
-                            output_res(res_label,4) = rel_w;
-                            output_res(res_label,5) = rel_h;
-                            output_res(res_label,6) = angle;
+                            output_res(res_label, 0) = score;
+                            output_res(res_label, 1) = class_id;
+                            output_res(res_label, 2) = rel_x;
+                            output_res(res_label, 3) = rel_y;
+                            output_res(res_label, 4) = rel_w;
+                            output_res(res_label, 5) = rel_h;
+                            output_res(res_label, 6) = angle;
                             res_label++;
-                        }   
+                        }
                         //指针跳到下一个向量的开头
                         input += (classes + 2);
                     }
@@ -281,5 +288,5 @@ float GetEnergyMac::sigmoid(float input_num)
         //防止数据溢出
         input_num = -10;
     }
-    return 1.0/(1+exp(-input_num));
+    return 1.0 / (1 + exp(-input_num));
 }
