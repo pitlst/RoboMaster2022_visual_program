@@ -1,9 +1,7 @@
 #include "aimbot.hpp"
 #include "logger.hpp"
 #include "debug.hpp"
-
-#include <iostream>
-#include <cmath>
+#include "utils.hpp"
 
 using namespace swq;
 
@@ -306,14 +304,7 @@ void GetArmor::CombineLightBar_ground()
 
 float GetArmor::GetArmorDistance(float s0, float s1)
 {
-    log_debug("调用了GetArmorDistance");
     return load_par.kh.ULLInt() / (s0 + s1);
-}
-
-float GetArmor::EuclideanDistance(float x0, float y0, float x1, float y1)
-{
-    log_debug("调用了EuclideanDistance");
-    return pow(pow(x0 - x1, 2) + pow(y0 - y1, 2), 0.5);
 }
 
 #ifdef COMPILE_DEBUG

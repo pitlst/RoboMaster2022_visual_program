@@ -18,29 +18,23 @@
 //能量机关模式参数-大符
 #define BIG_ENERGY_BUFFER 8002
 
-//nms参数
+// nms参数
 //这是模型的目标置信度阈值
 #define MODEL_THRESHOLD 0.
 //这是模型的类别置信度阈值
 #define CLASSES_THRESHOLD 0.
 
-//此宏定义用于决定能量机关中心筛选方式
-//0为只根据深度学习
-//1为只根据传统视觉
-//2为对传统center与深度学习center取交集，此方案应用于模型有大概率误识别的情况
-//3为深度学习丢失后用传统视觉弥补，此情况应用于模型有大概率漏识别的情况
-#define CENTER_FILTER_MODE 0
-
+//大符预测的最大历史记录次数
+#define BUFFER_HISTORY_LEN_MAX 300
 
 //开启此宏定义关闭所有日志输出
 //#define NO_LOG
 
 //开启后在release模式下开始debug输出，用于测试编译器不同等级对程序的影响
 #ifdef COMPILE_RELEASE
-    #undef COMPILE_RELEASE
-    #define COMPILE_DEBUG
+#undef COMPILE_RELEASE
+#define COMPILE_DEBUG
 #endif
-
 
 //开启此宏定义记录视频
 #define SAVE_VIDEO
@@ -53,5 +47,4 @@
 
 //开启此宏定义启用GPU推理,不启用默认使用CPU
 #define GPU_INFER
-
 

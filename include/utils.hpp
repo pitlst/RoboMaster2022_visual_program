@@ -13,4 +13,7 @@ namespace swq
 
     //判断字符串是否为纯数字组成
     bool is_Numeric(std::string str);
+
+    //计算欧式距离
+    float EuclideanDistance(float x0, float y0, float x1, float y1);
 }

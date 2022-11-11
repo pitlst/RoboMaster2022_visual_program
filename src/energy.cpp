@@ -48,8 +48,8 @@ void GetEnergyMac::set(int input_debug, int input_color, int input_mode)
     //如果更改重新配置
     if (label)
     {
-        load_json();
-        openvino_init();
+        // load_json();
+        // openvino_init();
     }
 }
 
@@ -81,11 +81,16 @@ void GetEnergyMac::load_json()
     load_camera.clear();
 }
 
-std::vector<long long int> GetEnergyMac::process(cv::Mat &input_frame)
+std::vector<int> GetEnergyMac::process(cv::Mat &input_frame, double f_time)
 {
+    buffer_para buffer_now;
+    buffer_now.f_time = f_time;
     frame = input_frame;
+    //输入图像转换成向量
     trans_mat_to_tensor();
+    //输入图像
     infer_request.set_input_tensor(input_tensor);
+    //推理
     infer_request.infer();
     //提取模型处理完的向量
     auto output_tensor_0 = infer_request.get_tensor(output_port_stride8);
@@ -96,21 +101,17 @@ std::vector<long long int> GetEnergyMac::process(cv::Mat &input_frame)
     output_tensor.emplace_back(output_tensor_2);
     output_tensor.emplace_back(output_tensor_0);
     output_tensor.emplace_back(output_tensor_1);
-    //把向量保存到矩阵里
+    //转换向量的格式
     trans_tansor_to_matrix(output_tensor);
-    res_label = 0;
-    std::vector<long long int> temp = {0, 0, 0};
-    return temp;
-}
-
-void GetEnergyMac::center_filter()
-{
-#ifdef CENTER_FILTER_MODE 0
-    
-#elif CENTER_FILTER_MODE 1
-#elif CENTER_FILTER_MODE 2
-#elif CENTER_FILTER_MODE 3
-#endif
+    //寻找中心
+    center_filter(buffer_now);
+    //寻找装甲板
+    energy_filter(buffer_now);
+    //保存该结果
+    armor.push(buffer_now);
+    //预测装甲板的位置
+    auto hit_pos = angle_predicted();
+    return hit_pos;
 }
 
 void GetEnergyMac::openvino_init()
@@ -145,10 +146,10 @@ void GetEnergyMac::openvino_init()
 
 void GetEnergyMac::model_para_init()
 {
-    model_par.input_n = input_port.get_shape()[0];
-    model_par.input_c = input_port.get_shape()[1];
-    model_par.input_h = input_port.get_shape()[2];
-    model_par.input_w = input_port.get_shape()[3];
+    model_par.input.n = input_port.get_shape()[0];
+    model_par.input.c = input_port.get_shape()[1];
+    model_par.input.w = input_port.get_shape()[2];
+    model_par.input.h = input_port.get_shape()[3];
     model_par.stride8.n = output_port_stride8.get_shape()[1];
     model_par.stride8.c = output_port_stride8.get_shape()[2];
     model_par.stride8.w = output_port_stride8.get_shape()[3];
@@ -162,13 +163,86 @@ void GetEnergyMac::model_para_init()
     model_par.stride32.w = output_port_stride32.get_shape()[3];
     model_par.stride32.h = output_port_stride32.get_shape()[4];
 
-    //如果模型不变，这个矩阵的形状可以写死
-    //矩阵的纵向长度7的含义为：
-    //置信度(图像目标*类别置信度)、类别、框的中心x、框的中心y、框的长w、框的宽h(这四个都相对于图像整体)、框的角度angle
+    //这里提前为输出矩阵申请最大可能长度的内存
     output_res.resize(model_par.stride8.n * model_par.stride8.c * model_par.stride8.w +
-                          model_par.stride16.n * model_par.stride16.c * model_par.stride16.w +
-                          model_par.stride32.n * model_par.stride32.c * model_par.stride32.w,
-                      7);
+                      model_par.stride16.n * model_par.stride16.c * model_par.stride16.w +
+                      model_par.stride32.n * model_par.stride32.c * model_par.stride32.w);
+    for (auto &ch : output_res)
+    {
+        ch.resize(7);
+    }
+}
+
+void GetEnergyMac::center_filter(buffer_para &buffer)
+{
+    std::vector<float> max_center;
+    for (auto &ch : output_res)
+    {
+        if (ch[1] == 2)
+        {
+            if (buffer.center.size() == 0)
+            {
+                buffer.center = ch;
+            }
+            else if (max_center[0] < ch[0])
+            {
+                buffer.center = ch;
+            }
+        }
+    }
+}
+
+void GetEnergyMac::energy_filter(buffer_para &buffer)
+{
+    std::vector<int> temp = {-1, -1, -1};
+    //中心没找到直接返回负数
+    if (buffer.center.size() == 0)
+    {
+        buffer.armor_point = temp;
+    }
+    for (const auto &ch : output_res)
+    {
+        auto pos_true = false;
+        if (ch[1] == 0)
+        {
+            auto distance = pow((buffer.center[2] - ch[2]), 2) + pow((buffer.center[3] - ch[3]), 2);
+            if (distance > energy_par.armor_R_distance_min && distance < energy_par.armor_R_distance_max)
+            {
+                for (const auto &_ch : output_res)
+                {
+                    if (_ch[1] == 1)
+                    {
+                        auto _distance = pow((_ch[2] - ch[2]), 2) + pow((_ch[3] - ch[3]), 2);
+                        if (_distance > energy_par.fan_armor_distence_max && _distance < energy_par.fan_armor_distence_min)
+                        {
+                            break;
+                        }
+                    }
+                }
+                pos_true = true;
+            }
+        }
+        if (pos_true)
+        {
+            if (temp[2] != -1)
+            {
+                log_error("存在多个待击打目标,随机选择一个，请注意");
+            }
+            temp = {int(ch[2]), int(ch[3]), 1};
+        }
+    }
+    buffer.armor_point = temp;
+}
+
+std::vector<int> GetEnergyMac::angle_predicted()
+{
+    std::vector<int> armor_point = {-1, -1, -1};
+    if (mode == SMALL_ENERGY_BUFFER)
+    {
+        armor.back().angle = 20;
+    }
+
+    return armor_point;
 }
 
 void GetEnergyMac::trans_mat_to_tensor()
@@ -179,9 +253,9 @@ void GetEnergyMac::trans_mat_to_tensor()
     int width = temp.cols;
     int height = temp.rows;
     //图像不符合大小则进行缩放
-    if (width != model_par.input_w || height != model_par.input_h)
+    if (width != model_par.input.h || height != model_par.input.w)
     {
-        cv::resize(temp, temp, cv::Size(model_par.input_w, model_par.input_h));
+        cv::resize(temp, temp, cv::Size(model_par.input.h, model_par.input.w));
         width = temp.cols;
         height = temp.rows;
     }
@@ -195,16 +269,16 @@ void GetEnergyMac::trans_mat_to_tensor()
 
 void GetEnergyMac::trans_tansor_to_matrix(std::vector<ov::Tensor> out_tenosr)
 {
-
-    float ratioh = float(frame.rows) / model_par.input_n;
-    float ratiow = float(frame.cols) / model_par.input_w;
+    auto index = 0;
+    auto ratioh = float(frame.rows) / model_par.input.w;
+    auto ratiow = float(frame.cols) / model_par.input.h;
     //遍历尺度
     for (auto n = 0; n < 3; n++)
     {
         const float *input = out_tenosr[n].data<const float>();
-        int num_grid_x = model_par.input_n / stride[n];
-        int num_grid_y = model_par.input_w / stride[n];
-        int area = num_grid_x * num_grid_y;
+        int num_grid_x = model_par.input.n / stride[n];
+        int num_grid_y = model_par.input.h / stride[n];
+        auto area = num_grid_x * num_grid_y;
         //遍历anchor
         for (auto q = 0; q < 3; q++)
         {
@@ -256,19 +330,27 @@ void GetEnergyMac::trans_tansor_to_matrix(std::vector<ov::Tensor> out_tenosr)
                             float h = powf(temp_h * 2.f, 2.f) * anchor_h;
 
                             //坐标还原到原图上
-                            int rel_x = cx * ratiow;
-                            int rel_y = cy * ratioh;
-                            int rel_w = w * ratiow;
-                            int rel_h = h * ratioh;
+                            auto rel_x = cx * ratiow;
+                            auto rel_y = cy * ratioh;
+                            auto rel_w = w * ratiow;
+                            auto rel_h = h * ratioh;
+
                             //置信度、类别、框的x、框的中心y、框的长w、框的宽h(这四个都相对于图像整体)、框的角度angle
-                            output_res(res_label, 0) = score;
-                            output_res(res_label, 1) = class_id;
-                            output_res(res_label, 2) = rel_x;
-                            output_res(res_label, 3) = rel_y;
-                            output_res(res_label, 4) = rel_w;
-                            output_res(res_label, 5) = rel_h;
-                            output_res(res_label, 6) = angle;
-                            res_label++;
+                            auto index_temp = 0;
+                            output_res[index][index_temp] = score;
+                            index_temp++;
+                            output_res[index][index_temp] = class_id;
+                            index_temp++;
+                            output_res[index][index_temp] = rel_x;
+                            index_temp++;
+                            output_res[index][index_temp] = rel_y;
+                            index_temp++;
+                            output_res[index][index_temp] = rel_w;
+                            index_temp++;
+                            output_res[index][index_temp] = rel_h;
+                            index_temp++;
+                            output_res[index][index_temp] = angle;
+                            index++;
                         }
                         //指针跳到下一个向量的开头
                         input += (classes + 2);
@@ -289,4 +371,12 @@ float GetEnergyMac::sigmoid(float input_num)
         input_num = -10;
     }
     return 1.0 / (1 + exp(-input_num));
+}
+
+void GetEnergyMac::vector_protect_process()
+{
+    while (armor.size() > BUFFER_HISTORY_LEN_MAX)
+    {
+        armor.pop();
+    }
 }

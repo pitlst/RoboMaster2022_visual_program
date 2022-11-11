@@ -12,7 +12,6 @@
 #include "opencv2/calib3d.hpp"
 
 #include "json.hpp"
-#include "utils.hpp"
 
 namespace swq
 {
@@ -36,8 +35,8 @@ namespace swq
         void CombineLightBar_ground();
         //单目测距
         float GetArmorDistance(float s0, float s1);
-        //计算欧式距离
-        float EuclideanDistance(float x0, float y0, float x1, float y1);
+        
+        
 
         int debug = 0;
         int color = 0;

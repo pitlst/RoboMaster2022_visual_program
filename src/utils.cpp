@@ -1,4 +1,5 @@
 #include "utils.hpp"
+#include <cmath>
 #include <fstream>
 #include <sstream>
 
@@ -50,4 +51,9 @@ bool swq::is_Numeric(std::string str)
         }
     }
     return true;
+}
+
+float swq::EuclideanDistance(float x0, float y0, float x1, float y1)
+{
+    return pow(pow(x0 - x1, 2) + pow(y0 - y1, 2), 0.5);
 }

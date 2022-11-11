@@ -24,49 +24,15 @@ namespace swq
 
         void set(int input_debug, int input_color, int input_mode);
         void load_json();
-        std::vector<long long int> process(cv::Mat &input_frame);
+        std::vector<int> process(cv::Mat &input_frame, double f_time);
 
-    private:
-        // openvino的初始化
-        void openvino_init();
-        //获取模型参数
-        void model_para_init();
-        //将cv::Mat转换为ov::Tensor,包括图像相关的前处理,仅支持FP32精度
-        void trans_mat_to_tensor();
-        //将模型输出的tensor转换为Matrix,并按照对应形状组织起来,仅支持FP32精度
-        void trans_tansor_to_matrix(std::vector<ov::Tensor> out_tenosr);
-        //sigmoid函数
-        float sigmoid(float input_num);
-        //筛选中心
-        void center_filter();
-
-        //类的状态标志位
-        int debug = 0;
-        int color = 0;
-        int mode = SMALL_ENERGY_BUFFER;
-        //处理的图像
-        cv::Mat frame;
-        //编译好,已加载到设备的模型
-        ov::CompiledModel compiled_model;
-        //模型推演请求
-        ov::InferRequest infer_request;
-        //根据模型结构定义的输入输出管道,
-        ov::Output<const ov::Node> input_port;
-        ov::Output<const ov::Node> output_port_stride8;
-        ov::Output<const ov::Node> output_port_stride16;
-        ov::Output<const ov::Node> output_port_stride32;
-        //输入模型的向量
-        ov::Tensor input_tensor;
-        //模型输出，用Eigen的动态数组存储
-        Eigen::Matrix<float, Eigen::Dynamic, Eigen::Dynamic> output_res;
-        //标志位，用于标记数组数组实际存储数据的多少
-        int res_label = 0;
-        //存储目标的空间坐标
-        struct armor_final
+        //存储目标的相关参数
+        struct buffer_para
         {
-            long long int x;
-            long long int y;
-            long long int z;
+            double angle;
+            double f_time;
+            std::vector<int> armor_point;
+            std::vector<float> center;
         };
         //能量机关需要的参数
         struct energy_para
@@ -88,7 +54,7 @@ namespace swq
             std::string model_path;
         };
         //模型相关的参数
-        struct out_shape
+        struct model_shape
         {
             int n;
             int c;
@@ -97,17 +63,58 @@ namespace swq
         };
         struct model_para
         {
-            int input_n;
-            int input_c;
-            int input_h;
-            int input_w;
             std::string type_str;
-            out_shape stride8;
-            out_shape stride16;
-            out_shape stride32;
+            model_shape input;
+            model_shape stride8;
+            model_shape stride16;
+            model_shape stride32;
         };
-        armor_final armor;
+
+    private:
+        // openvino的初始化
+        void openvino_init();
+        //获取模型参数
+        void model_para_init();
+        //将cv::Mat转换为ov::Tensor,包括图像相关的前处理,仅支持FP32精度
+        void trans_mat_to_tensor();
+        //将模型输出的tensor转换为Matrix,并按照对应形状组织起来,仅支持FP32精度
+        void trans_tansor_to_matrix(std::vector<ov::Tensor> out_tenosr);
+        //sigmoid函数
+        float sigmoid(float input_num);
+        //筛选中心
+        void center_filter(buffer_para & buffer);
+        //筛选被击打的装甲板
+        void energy_filter(buffer_para & buffer);
+        //预测装甲板
+        std::vector<int> angle_predicted();
+        //检查维护目标历史记录
+        void vector_protect_process();
+
+
+        //类的状态标志位
+        int debug = 0;
+        int color = 0;
+        int mode = SMALL_ENERGY_BUFFER;
+        //处理的图像
+        cv::Mat frame;
+        //编译好,已加载到设备的模型
+        ov::CompiledModel compiled_model;
+        //模型推演请求
+        ov::InferRequest infer_request;
+        //根据模型结构定义的输入输出管道,
+        ov::Output<const ov::Node> input_port;
+        ov::Output<const ov::Node> output_port_stride8;
+        ov::Output<const ov::Node> output_port_stride16;
+        ov::Output<const ov::Node> output_port_stride32;
+        //输入模型的向量
+        ov::Tensor input_tensor;
+        //模型输出
+        std::vector<std::vector<float>> output_res;
+        //历史目标记录,使用队列存储
+        std::queue<buffer_para> armor;
+        //能量机关参数
         energy_para energy_par;
+        //模型参数
         model_para model_par;
         
         //模型的anchor直接写死在这里了,如果需要更改训练程序中的anchor，请配合更改这里
