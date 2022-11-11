@@ -194,7 +194,7 @@ void GetEnergyMac::center_filter(buffer_para &buffer)
 
 void GetEnergyMac::energy_filter(buffer_para &buffer)
 {
-    std::vector<int> temp = {-1, -1, -1};
+    std::vector<float> temp = {-1, -1, -1};
     //中心没找到直接返回负数
     if (buffer.center.size() == 0)
     {
@@ -228,7 +228,7 @@ void GetEnergyMac::energy_filter(buffer_para &buffer)
             {
                 log_error("存在多个待击打目标,随机选择一个，请注意");
             }
-            temp = {int(ch[2]), int(ch[3]), 1};
+            temp = {ch[2], ch[3], 1};
         }
     }
     buffer.armor_point = temp;
@@ -236,13 +236,65 @@ void GetEnergyMac::energy_filter(buffer_para &buffer)
 
 std::vector<int> GetEnergyMac::angle_predicted()
 {
-    std::vector<int> armor_point = {-1, -1, -1};
+    auto temp_buffer = armor.back();
+    std::vector<int> armor_point = {-1 ,-1, -1};
+    //检查开始时间
+    if (begin_time == 0)
+    {
+        begin_time = temp_buffer.f_time;
+    }
+    //检查是否检测到了中心
+    if (temp_buffer.center.size() == 0)
+    {
+        return armor_point;
+    }
+    //检测是否检测到了目标
+    if (temp_buffer.armor_point[2] == -1)
+    {
+        return armor_point;
+    }
+    //判断旋转方向
+    detect = judge_rotate_direct();
+    //计算能量机关半径
+    hitDis = EuclideanDistance(temp_buffer.armor_point[2], temp_buffer.armor_point[3], temp_buffer.center[2], temp_buffer.center[3]);
+    //计算旋转角度,通过角度进行预测
+    auto angle = cartesian_to_polar();
     if (mode == SMALL_ENERGY_BUFFER)
     {
-        armor.back().angle = 20;
+        temp_buffer = energymac_forecast_small(temp_buffer,angle);
     }
-
+    else if (mode == BIG_ENERGY_BUFFER)
+    {
+        temp_buffer = energymac_forecast_big(temp_buffer,angle);
+    }
+    else
+    {
+        log_error("未知的大符旋转标志位,输出未预测的原坐标");
+    }
+    armor_point[0] = temp_buffer.armor_point[0];
+    armor_point[1] = temp_buffer.armor_point[1];
+    armor_point[2] = temp_buffer.armor_point[2];
     return armor_point;
+}
+
+bool GetEnergyMac::judge_rotate_direct()
+{
+
+}
+
+double GetEnergyMac::cartesian_to_polar()
+{
+    
+}
+
+GetEnergyMac::buffer_para GetEnergyMac::energymac_forecast_small(buffer_para & buffer, double angle)
+{
+
+}
+
+GetEnergyMac::buffer_para GetEnergyMac::energymac_forecast_big(buffer_para & buffer, double angle)
+{
+
 }
 
 void GetEnergyMac::trans_mat_to_tensor()

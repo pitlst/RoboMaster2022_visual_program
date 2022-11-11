@@ -15,5 +15,5 @@ namespace swq
     bool is_Numeric(std::string str);
 
     //计算欧式距离
-    float EuclideanDistance(float x0, float y0, float x1, float y1);
+    inline float EuclideanDistance(float x0, float y0, float x1, float y1);
 }

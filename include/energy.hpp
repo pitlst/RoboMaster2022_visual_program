@@ -1,6 +1,5 @@
 #pragma once
 #include <string>
-#include <memory>
 
 #include "opencv2/opencv.hpp"
 #include "opencv2/core.hpp"
@@ -31,10 +30,10 @@ namespace swq
         {
             double angle;
             double f_time;
-            std::vector<int> armor_point;
+            std::vector<float> armor_point;
             std::vector<float> center;
         };
-        //能量机关需要的参数
+        //能量机关需要的筛选参数
         struct energy_para
         {
             int center_dis_x;
@@ -53,7 +52,7 @@ namespace swq
             double nms_distence_max;
             std::string model_path;
         };
-        //模型相关的参数
+        //向量的形状
         struct model_shape
         {
             int n;
@@ -61,13 +60,14 @@ namespace swq
             int w;
             int h;
         };
+        //模型相关的参数
         struct model_para
         {
-            std::string type_str;
             model_shape input;
             model_shape stride8;
             model_shape stride16;
             model_shape stride32;
+            std::string type_str;
         };
 
     private:
@@ -85,8 +85,16 @@ namespace swq
         void center_filter(buffer_para & buffer);
         //筛选被击打的装甲板
         void energy_filter(buffer_para & buffer);
-        //预测装甲板
+        //预测装甲板位置
         std::vector<int> angle_predicted();
+        //判断符的旋转方向
+        bool judge_rotate_direct();
+        //笛卡尔坐标与极坐标转换
+        double cartesian_to_polar();
+        //小符预测
+        buffer_para energymac_forecast_small(buffer_para & buffer, double angle);
+        //大符预测
+        buffer_para energymac_forecast_big(buffer_para & buffer, double angle);
         //检查维护目标历史记录
         void vector_protect_process();
 
@@ -94,7 +102,14 @@ namespace swq
         //类的状态标志位
         int debug = 0;
         int color = 0;
+        //检测的开始时间
+        double begin_time = 0;
+        //能量机关的旋转模式
         int mode = SMALL_ENERGY_BUFFER;
+        //能量机关的旋转方向,0顺时针,1逆时针
+        bool detect = false;
+        //能量机关的半径
+        float hitDis;
         //处理的图像
         cv::Mat frame;
         //编译好,已加载到设备的模型
@@ -112,9 +127,7 @@ namespace swq
         std::vector<std::vector<float>> output_res;
         //历史目标记录,使用队列存储
         std::queue<buffer_para> armor;
-        //能量机关参数
         energy_para energy_par;
-        //模型参数
         model_para model_par;
         
         //模型的anchor直接写死在这里了,如果需要更改训练程序中的anchor，请配合更改这里
@@ -123,17 +136,5 @@ namespace swq
         const float stride[3] = {8.0, 16.0, 32.0};
         //模型类别
         const int classes = 3;
-
-#ifdef COMPILE_DEBUG
-    public:
-        // debug下用于返回图像
-        std::list<cv::Mat> debug_frame();
-
-    private:
-        // debug下更新筛选参数
-        void updata_argument();
-        // debug下json文件里的参数
-        void update_json();
-#endif
     };
 }
