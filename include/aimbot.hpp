@@ -26,30 +26,6 @@ namespace swq
         void load_json();
         std::vector<long long int> process(cv::Mat &input_frame);
 
-    private:
-        //将输入图像处理成hsv格式，然后通过阈值转换成二值图
-        void HSV_Process();
-        //处理提取完的二值图，生成存储灯条特征的二维数组
-        void GetLightBar();
-        //匹配装甲板，生成拟合完成的装甲板列表
-        void CombineLightBar_ground();
-        //单目测距
-        float GetArmorDistance(float s0, float s1);
-        
-        
-
-        int debug = 0;
-        int color = 0;
-        //图像中心像素数
-        int img_xCenter;
-        int img_yCenter;
-        //处理的图像
-        cv::Mat frame;
-        cv::Mat mask;
-        //存储灯条
-        std::vector<cv::RotatedRect> *lightBarList;
-        //存储装甲板
-        std::vector<std::vector<float>> *realCenter_list;
         //存储最后的空间坐标
         struct armor_final
         {
@@ -100,6 +76,29 @@ namespace swq
             //测距
             json kh;
         };
+
+    private:
+        //将输入图像处理成hsv格式，然后通过阈值转换成二值图
+        void HSV_Process();
+        //处理提取完的二值图，生成存储灯条特征的二维数组
+        void GetLightBar();
+        //匹配装甲板，生成拟合完成的装甲板列表
+        void CombineLightBar_ground();
+        //单目测距
+        float GetArmorDistance(float s0, float s1);
+
+        int debug = 0;
+        int color = 0;
+        //图像中心像素数
+        int img_xCenter;
+        int img_yCenter;
+        //处理的图像
+        cv::Mat frame;
+        cv::Mat mask;
+        //存储灯条
+        std::vector<cv::RotatedRect> *lightBarList;
+        //存储装甲板
+        std::vector<std::vector<float>> *realCenter_list;
         armor_final armor;
         fiter_para load_par;
 

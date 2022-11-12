@@ -1,3 +1,4 @@
 build/*
 asset/log.txt
 asset/openvino-GPU
+3rd_part/*

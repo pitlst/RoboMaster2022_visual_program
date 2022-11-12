@@ -17,6 +17,8 @@
 #define SMALL_ENERGY_BUFFER 8001
 //能量机关模式参数-大符
 #define BIG_ENERGY_BUFFER 8002
+//圆周率
+#define PI acos(-1)
 
 // nms参数
 //这是模型的目标置信度阈值
@@ -26,6 +28,8 @@
 
 //大符预测的最大历史记录次数
 #define BUFFER_HISTORY_LEN_MAX 300
+//角度自动判断的迭代次数
+#define BUFFER_DETECT_COUNT 500
 
 //开启此宏定义关闭所有日志输出
 //#define NO_LOG

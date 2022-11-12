@@ -1,5 +1,6 @@
 #pragma once
 #include <string>
+#include <deque>
 
 #include "opencv2/opencv.hpp"
 #include "opencv2/core.hpp"
@@ -28,9 +29,11 @@ namespace swq
         //存储目标的相关参数
         struct buffer_para
         {
-            double angle;
+            double delta_angle;
             double f_time;
+            //这里的待击打点是一个三个点的空间坐标
             std::vector<float> armor_point;
+            //这里的center是一个网络输出的完整列向量
             std::vector<float> center;
         };
         //能量机关需要的筛选参数
@@ -88,13 +91,13 @@ namespace swq
         //预测装甲板位置
         std::vector<int> angle_predicted();
         //判断符的旋转方向
-        bool judge_rotate_direct();
+        int judge_rotate_direct();
         //笛卡尔坐标与极坐标转换
-        double cartesian_to_polar();
+        double cartesian_to_polar(buffer_para & buffer);
         //小符预测
-        buffer_para energymac_forecast_small(buffer_para & buffer, double angle);
+        inline double energymac_forecast_small(double angle);
         //大符预测
-        buffer_para energymac_forecast_big(buffer_para & buffer, double angle);
+        double energymac_forecast_big(double angle);
         //检查维护目标历史记录
         void vector_protect_process();
 
@@ -107,7 +110,7 @@ namespace swq
         //能量机关的旋转模式
         int mode = SMALL_ENERGY_BUFFER;
         //能量机关的旋转方向,0顺时针,1逆时针
-        bool detect = false;
+        int detect = 0;
         //能量机关的半径
         float hitDis;
         //处理的图像
@@ -126,7 +129,7 @@ namespace swq
         //模型输出
         std::vector<std::vector<float>> output_res;
         //历史目标记录,使用队列存储
-        std::queue<buffer_para> armor;
+        std::deque<buffer_para> armor;
         energy_para energy_par;
         model_para model_par;
         
@@ -137,4 +140,6 @@ namespace swq
         //模型类别
         const int classes = 3;
     };
+
+
 }

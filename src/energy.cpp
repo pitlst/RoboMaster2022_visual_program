@@ -108,7 +108,7 @@ std::vector<int> GetEnergyMac::process(cv::Mat &input_frame, double f_time)
     //寻找装甲板
     energy_filter(buffer_now);
     //保存该结果
-    armor.push(buffer_now);
+    armor.emplace_back(buffer_now);
     //预测装甲板的位置
     auto hit_pos = angle_predicted();
     return hit_pos;
@@ -237,7 +237,7 @@ void GetEnergyMac::energy_filter(buffer_para &buffer)
 std::vector<int> GetEnergyMac::angle_predicted()
 {
     auto temp_buffer = armor.back();
-    std::vector<int> armor_point = {-1 ,-1, -1};
+    std::vector<int> armor_point = {-1, -1, -1};
     //检查开始时间
     if (begin_time == 0)
     {
@@ -258,42 +258,111 @@ std::vector<int> GetEnergyMac::angle_predicted()
     //计算能量机关半径
     hitDis = EuclideanDistance(temp_buffer.armor_point[2], temp_buffer.armor_point[3], temp_buffer.center[2], temp_buffer.center[3]);
     //计算旋转角度,通过角度进行预测
-    auto angle = cartesian_to_polar();
+    auto angle = cartesian_to_polar(temp_buffer);
     if (mode == SMALL_ENERGY_BUFFER)
     {
-        temp_buffer = energymac_forecast_small(temp_buffer,angle);
+        angle = energymac_forecast_small(angle);
     }
     else if (mode == BIG_ENERGY_BUFFER)
     {
-        temp_buffer = energymac_forecast_big(temp_buffer,angle);
+        angle = energymac_forecast_big(angle);
     }
     else
     {
         log_error("未知的大符旋转标志位,输出未预测的原坐标");
     }
-    armor_point[0] = temp_buffer.armor_point[0];
-    armor_point[1] = temp_buffer.armor_point[1];
+
+    angle = angle /180.0f*PI;
+    armor_point[0] = temp_buffer.center[2] + hitDis*cos(angle);
+    armor_point[1] = temp_buffer.center[3] + hitDis*sin(angle);
     armor_point[2] = temp_buffer.armor_point[2];
+
     return armor_point;
 }
 
-bool GetEnergyMac::judge_rotate_direct()
+int GetEnergyMac::judge_rotate_direct()
 {
+    static int count_n = 0;
+    count_n++;
+    if (count_n > BUFFER_DETECT_COUNT)
+    {
+        return detect;
+    }
+    else if (armor.size() > 0)
+    {
+        auto angle_1 = atan2(armor[-1].armor_point[0], armor[-1].armor_point[1]);
+        auto angle_2 = atan2(armor[-2].armor_point[0], armor[-2].armor_point[1]);
+        auto delta_angle = abs((angle_1 - angle_2) * 180.0f / PI);
+        //如果角度差不准，再添加最大值过滤
+        armor[-1].delta_angle = delta_angle;
 
+        decltype(delta_angle) temp_angle;
+        for (const auto &ch : armor)
+        {
+            temp_angle += ch.delta_angle;
+        }
+        temp_angle = temp_angle / armor.size();
+        if (temp_angle > 0)
+        {
+            detect = 1;
+        }
+        else if (temp_angle < 0)
+        {
+            detect = -1;
+        }
+    }
+    return detect;
 }
 
-double GetEnergyMac::cartesian_to_polar()
+double GetEnergyMac::cartesian_to_polar(buffer_para &buffer)
 {
-    
+    auto vectorx = buffer.armor_point[0] - buffer.center[2];
+    auto vectory = buffer.armor_point[1] - buffer.center[3];
+    float angle = -1;
+    if (vectorx > 0 && vectory > 0)
+    {
+        angle = atan(abs(vectory / vectorx)) * 180 / PI;
+    }
+    else if (vectorx < 0 && vectory > 0)
+    {
+        angle = 180.0f - atan(abs(vectory / vectorx)) * 180 / PI;
+    }
+    else if (vectorx < 0 && vectory < 0)
+    {
+        angle = 180.0f + atan(abs(vectory / vectorx)) * 180 / PI;
+    }
+    else if (vectorx < 0 && vectory < 0)
+    {
+        angle = 360.0f - atan(abs(vectory / vectorx)) * 180 / PI;
+    }
+    else if (vectorx == 0 && vectory > 0)
+    {
+        angle = 270.0f;
+    }
+    else if (vectorx == 0 && vectory <= 0)
+    {
+        angle = 90.0f;
+    }
+    else if (vectory == 0 && vectorx > 0)
+    {
+        angle = 0.0f;
+    }
+    else if (vectorx == 0 && vectory <= 0)
+    {
+        angle = 180.0f;
+    }
+    return angle;
 }
 
-GetEnergyMac::buffer_para GetEnergyMac::energymac_forecast_small(buffer_para & buffer, double angle)
+inline double GetEnergyMac::energymac_forecast_small(double angle)
 {
-
+    return detect*energy_par.predict_small + angle;
 }
 
-GetEnergyMac::buffer_para GetEnergyMac::energymac_forecast_big(buffer_para & buffer, double angle)
+double GetEnergyMac::energymac_forecast_big(double angle)
 {
+    //这里可以采取两种预测方式：
+    //一种是一维卡尔曼滤波,另一种是分段映射,手动绘制函数
 
 }
 
@@ -429,6 +498,6 @@ void GetEnergyMac::vector_protect_process()
 {
     while (armor.size() > BUFFER_HISTORY_LEN_MAX)
     {
-        armor.pop();
+        armor.pop_front();
     }
 }
