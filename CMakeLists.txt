@@ -25,7 +25,7 @@ endif()
 include_directories(include)
 include_directories(3rd_part/include)
 # 搜索src下源文件存入DIR_SRCS变量
-aux_source_directory(${CMAKE_CURRENT_SOURCE_DIR}/src DIR_SRCS)
+FILE (GLOB DIR_SRCS "src/*.cpp")
 # 找到所有声明，保存到变量里
 FILE (GLOB M_INCLUDES "include/*.hpp")
 # 找到所有第三方动态库，保存到变量里

@@ -81,7 +81,7 @@ void GetEnergyMac::load_json()
     load_camera.clear();
 }
 
-std::vector<int> GetEnergyMac::process(cv::Mat &input_frame, double f_time)
+std::vector<int> GetEnergyMac::process(cv::Mat & input_frame, double f_time)
 {
     buffer_para buffer_now;
     buffer_now.f_time = f_time;
@@ -97,6 +97,7 @@ std::vector<int> GetEnergyMac::process(cv::Mat &input_frame, double f_time)
     auto output_tensor_1 = infer_request.get_tensor(output_port_stride16);
     auto output_tensor_2 = infer_request.get_tensor(output_port_stride32);
     //由于模型的结构是16,32,8,所以这里把最后一个移到前面来,同时组织成容器，方便循环时调用
+    
     std::vector<ov::Tensor> output_tensor;
     output_tensor.emplace_back(output_tensor_2);
     output_tensor.emplace_back(output_tensor_0);
@@ -110,7 +111,9 @@ std::vector<int> GetEnergyMac::process(cv::Mat &input_frame, double f_time)
     //保存该结果
     armor.emplace_back(buffer_now);
     //预测装甲板的位置
-    auto hit_pos = angle_predicted();
+    //auto hit_pos = angle_predicted();
+    angle_predicted();
+    std::vector<int> hit_pos =  {-1,-1,-1};
     return hit_pos;
 }
 
@@ -119,7 +122,7 @@ void GetEnergyMac::openvino_init()
     //初始化openvino核心
     ov::Core core;
     //读取模型
-    auto model = core.read_model(energy_par.model_path);
+    model = core.read_model(energy_par.model_path);
     //将模型加载到设备
 #ifdef GPU_INFER
     compiled_model = core.compile_model(model, "GPU");
@@ -196,39 +199,38 @@ void GetEnergyMac::energy_filter(buffer_para &buffer)
 {
     std::vector<float> temp = {-1, -1, -1};
     //中心没找到直接返回负数
-    if (buffer.center.size() == 0)
-    {
-        buffer.armor_point = temp;
-    }
-    for (const auto &ch : output_res)
-    {
-        auto pos_true = false;
-        if (ch[1] == 0)
+    if (buffer.center.size() != 0)
+    { 
+        for (const auto &ch : output_res)
         {
-            auto distance = pow((buffer.center[2] - ch[2]), 2) + pow((buffer.center[3] - ch[3]), 2);
-            if (distance > energy_par.armor_R_distance_min && distance < energy_par.armor_R_distance_max)
+            auto pos_true = false;
+            if (ch[1] == 0)
             {
-                for (const auto &_ch : output_res)
+                auto distance = pow((buffer.center[2] - ch[2]), 2) + pow((buffer.center[3] - ch[3]), 2);
+                if (distance > energy_par.armor_R_distance_min && distance < energy_par.armor_R_distance_max)
                 {
-                    if (_ch[1] == 1)
+                    for (const auto &_ch : output_res)
                     {
-                        auto _distance = pow((_ch[2] - ch[2]), 2) + pow((_ch[3] - ch[3]), 2);
-                        if (_distance > energy_par.fan_armor_distence_max && _distance < energy_par.fan_armor_distence_min)
+                        if (_ch[1] == 1)
                         {
-                            break;
+                            auto _distance = pow((_ch[2] - ch[2]), 2) + pow((_ch[3] - ch[3]), 2);
+                            if (_distance > energy_par.fan_armor_distence_max && _distance < energy_par.fan_armor_distence_min)
+                            {
+                                break;
+                            }
                         }
                     }
+                    pos_true = true;
                 }
-                pos_true = true;
             }
-        }
-        if (pos_true)
-        {
-            if (temp[2] != -1)
+            if (pos_true)
             {
-                log_error("存在多个待击打目标,随机选择一个，请注意");
+                if (temp[2] != -1)
+                {
+                    log_error("存在多个待击打目标,随机选择一个，请注意");
+                }
+                temp = {ch[2], ch[3], 1};
             }
-            temp = {ch[2], ch[3], 1};
         }
     }
     buffer.armor_point = temp;
@@ -282,7 +284,7 @@ std::vector<int> GetEnergyMac::angle_predicted()
 
 int GetEnergyMac::judge_rotate_direct()
 {
-    static int count_n = 0;
+    static int count_n;
     count_n++;
     if (count_n > BUFFER_DETECT_COUNT)
     {
@@ -354,7 +356,7 @@ double GetEnergyMac::cartesian_to_polar(buffer_para &buffer)
     return angle;
 }
 
-inline double GetEnergyMac::energymac_forecast_small(double angle)
+double GetEnergyMac::energymac_forecast_small(double angle)
 {
     return detect*energy_par.predict_small + angle;
 }
@@ -363,28 +365,19 @@ double GetEnergyMac::energymac_forecast_big(double angle)
 {
     //这里可以采取两种预测方式：
     //一种是一维卡尔曼滤波,另一种是分段映射,手动绘制函数
-
+    return angle;
 }
 
 void GetEnergyMac::trans_mat_to_tensor()
 {
-    cv::Mat temp;
     //图像归一化
-    cv::normalize(frame, temp, 1.0, 0.0, cv::NORM_MINMAX);
-    int width = temp.cols;
-    int height = temp.rows;
-    //图像不符合大小则进行缩放
-    if (width != model_par.input.h || height != model_par.input.w)
-    {
-        cv::resize(temp, temp, cv::Size(model_par.input.h, model_par.input.w));
-        width = temp.cols;
-        height = temp.rows;
-    }
-    size_t size = width * height * temp.channels();
-    std::shared_ptr<float> _data;
+    cv::normalize(frame, frame, 1.0, 0.0, cv::NORM_MINMAX);
+    int width = frame.cols;
+    int height = frame.rows;
+    size_t size = width * height * frame.channels();
     _data.reset(new float[size], std::default_delete<float[]>()); //按照图像大小初始化指向的位置
-    cv::Mat resized(cv::Size(width, height), temp.type(), _data.get());
-    cv::resize(temp, resized, cv::Size(width, height)); //这里借用opencv自己的构造，让数据填充到_data指向的的位置
+    cv::Mat resized(cv::Size(width, height), frame.type(), _data.get());
+    cv::resize(frame, resized, cv::Size(width, height)); //这里借用opencv自己的构造，让数据填充到_data指向的的位置
     input_tensor = ov::Tensor(input_port.get_element_type(), input_port.get_shape(), _data.get());
 }
 

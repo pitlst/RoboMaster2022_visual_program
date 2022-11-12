@@ -23,8 +23,7 @@ namespace swq
         ~GetEnergyMac();
 
         void set(int input_debug, int input_color, int input_mode);
-        void load_json();
-        std::vector<int> process(cv::Mat &input_frame, double f_time);
+        std::vector<int> process(cv::Mat & input_frame, double f_time);
 
         //存储目标的相关参数
         struct buffer_para
@@ -74,6 +73,8 @@ namespace swq
         };
 
     private:
+        //读取参数
+        void load_json();
         // openvino的初始化
         void openvino_init();
         //获取模型参数
@@ -95,7 +96,7 @@ namespace swq
         //笛卡尔坐标与极坐标转换
         double cartesian_to_polar(buffer_para & buffer);
         //小符预测
-        inline double energymac_forecast_small(double angle);
+        double energymac_forecast_small(double angle);
         //大符预测
         double energymac_forecast_big(double angle);
         //检查维护目标历史记录
@@ -115,6 +116,10 @@ namespace swq
         float hitDis;
         //处理的图像
         cv::Mat frame;
+        //指向处理图像的指针
+        std::shared_ptr<float> _data;
+        //读取的模型
+        std::shared_ptr<ov::Model> model;
         //编译好,已加载到设备的模型
         ov::CompiledModel compiled_model;
         //模型推演请求
