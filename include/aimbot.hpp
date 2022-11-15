@@ -24,14 +24,14 @@ namespace swq
 
         void set(int input_debug, int input_color);
         void load_json();
-        std::vector<long long int> process(cv::Mat &input_frame);
+        std::vector<int> process(cv::Mat &input_frame);
 
         //存储最后的空间坐标
         struct armor_final
         {
-            long long int x;
-            long long int y;
-            long long int z;
+            int x;
+            int y;
+            int z;
         };
         //筛选需要的参数
         struct fiter_para

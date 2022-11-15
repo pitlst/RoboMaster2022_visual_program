@@ -44,14 +44,15 @@ if("${CMAKE_BUILD_TYPE}" MATCHES "Debug")
     message(STATUS "openvino的安装路径 ${OpenVINO_DIR}")
     message(STATUS "需要链接的源文件有 ${DIR_SRCS}")
     message(STATUS "需要链接的头文件有 ${M_INCLUDES}${3rd_INCLUDE}")
-    message(STATUS "需要链接的动态库有 ${OpenCV_LIBS}${3rd_LIBS} 和 openvino::runtime")
+    message(STATUS "需要链接的动态库有 ${OpenCV_LIBS}${3rd_LIBS} pthread 和 openvino::runtime")
 endif()
+
 # 导入头文件
 include_directories(${OpenCV_INCLUDE_DIRS} ${EIGEN3_INCLUDE_DIR})
 # 生成目标可执行文件
 add_executable(${PROJECT_NAME} ${DIR_SRCS} ${M_INCLUDES} ${3rd_INCLUDE})
 # 链接动态库
-target_link_libraries(${PROJECT_NAME} PRIVATE ${OpenCV_LIBS} ${3rd_LIBS} openvino::runtime)
+target_link_libraries(${PROJECT_NAME} PRIVATE pthread ${OpenCV_LIBS} ${3rd_LIBS} openvino::runtime)
 
 
 if("${CMAKE_BUILD_TYPE}" MATCHES "Debug")

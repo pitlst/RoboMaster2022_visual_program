@@ -1,4 +1,5 @@
 build/*
 asset/log.txt
+asset/com.txt
 asset/openvino-GPU
 3rd_part/*

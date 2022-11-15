@@ -106,13 +106,13 @@ void GetArmor::load_json()
     load_camera.clear();
 }
 
-std::vector<long long int> GetArmor::process(cv::Mat &input_frame)
+std::vector<int> GetArmor::process(cv::Mat &input_frame)
 {
     frame = input_frame;
     HSV_Process();
     GetLightBar();
     CombineLightBar_ground();
-    std::vector<long long int> xyz = {armor.x, armor.y, armor.z};
+    std::vector<int> xyz = {armor.x, armor.y, armor.z};
     return xyz;
 }
 
