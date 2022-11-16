@@ -13,11 +13,9 @@ GetEnergyMac::GetEnergyMac()
     openvino_init();
 }
 
-GetEnergyMac::GetEnergyMac(int input_debug, int input_color, int input_mode)
+GetEnergyMac::GetEnergyMac(int input_mode)
 {
-    debug = input_debug;
-    color = input_color;
-    mode = input_mode;
+    set(input_mode);
     load_json();
     openvino_init();
 }
@@ -26,30 +24,15 @@ GetEnergyMac::~GetEnergyMac()
 {
 }
 
-void GetEnergyMac::set(int input_debug, int input_color, int input_mode)
+void GetEnergyMac::set(int input_mode)
 {
-    //检查是否有更改
-    bool label = false;
-    if (debug != input_debug)
+    if (input_mode == 2)
     {
-        debug = input_debug;
-        label = true;
+        mode = BIG_ENERGY_BUFFER;
     }
-    if (color != input_color)
+    else if (input_mode == 1)
     {
-        color = input_color;
-        label = true;
-    }
-    if (mode != input_mode)
-    {
-        mode = input_mode;
-        label = true;
-    }
-    //如果更改重新配置
-    if (label)
-    {
-        // load_json();
-        // openvino_init();
+        mode = SMALL_ENERGY_BUFFER;
     }
 }
 
@@ -81,7 +64,7 @@ void GetEnergyMac::load_json()
     load_camera.clear();
 }
 
-std::vector<int> GetEnergyMac::process(cv::Mat & input_frame, double f_time)
+std::vector<int> GetEnergyMac::process(cv::Mat &input_frame, double f_time)
 {
     buffer_para buffer_now;
     buffer_now.f_time = f_time;
@@ -97,7 +80,7 @@ std::vector<int> GetEnergyMac::process(cv::Mat & input_frame, double f_time)
     auto output_tensor_1 = infer_request.get_tensor(output_port_stride16);
     auto output_tensor_2 = infer_request.get_tensor(output_port_stride32);
     //由于模型的结构是16,32,8,所以这里把最后一个移到前面来,同时组织成容器，方便循环时调用
-    
+
     std::vector<ov::Tensor> output_tensor;
     output_tensor.emplace_back(output_tensor_2);
     output_tensor.emplace_back(output_tensor_0);
@@ -111,9 +94,9 @@ std::vector<int> GetEnergyMac::process(cv::Mat & input_frame, double f_time)
     //保存该结果
     armor.emplace_back(buffer_now);
     //预测装甲板的位置
-    //auto hit_pos = angle_predicted();
+    // auto hit_pos = angle_predicted();
     angle_predicted();
-    std::vector<int> hit_pos =  {-1,-1,-1};
+    std::vector<int> hit_pos = {-1, -1, -1};
     return hit_pos;
 }
 
@@ -200,7 +183,7 @@ void GetEnergyMac::energy_filter(buffer_para &buffer)
     std::vector<float> temp = {-1, -1, -1};
     //中心没找到直接返回负数
     if (buffer.center.size() != 0)
-    { 
+    {
         for (const auto &ch : output_res)
         {
             auto pos_true = false;
@@ -274,9 +257,9 @@ std::vector<int> GetEnergyMac::angle_predicted()
         log_error("未知的大符旋转标志位,输出未预测的原坐标");
     }
 
-    angle = angle /180.0f*PI;
-    armor_point[0] = temp_buffer.center[2] + hitDis*cos(angle);
-    armor_point[1] = temp_buffer.center[3] + hitDis*sin(angle);
+    angle = angle / 180.0f * PI;
+    armor_point[0] = temp_buffer.center[2] + hitDis * cos(angle);
+    armor_point[1] = temp_buffer.center[3] + hitDis * sin(angle);
     armor_point[2] = temp_buffer.armor_point[2];
 
     return armor_point;
@@ -358,7 +341,7 @@ double GetEnergyMac::cartesian_to_polar(buffer_para &buffer)
 
 double GetEnergyMac::energymac_forecast_small(double angle)
 {
-    return detect*energy_par.predict_small + angle;
+    return detect * energy_par.predict_small + angle;
 }
 
 double GetEnergyMac::energymac_forecast_big(double angle)

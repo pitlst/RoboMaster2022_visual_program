@@ -12,6 +12,7 @@
 #include "opencv2/calib3d.hpp"
 
 #include "json.hpp"
+#include "debug.hpp"
 
 namespace swq
 {
@@ -19,10 +20,9 @@ namespace swq
     {
     public:
         GetArmor();
-        GetArmor(int input_debug, int input_color);
         ~GetArmor();
 
-        void set(int input_debug, int input_color);
+        void set(bool input_color);
         void load_json();
         std::vector<int> process(cv::Mat &input_frame);
 
@@ -87,8 +87,7 @@ namespace swq
         //单目测距
         float GetArmorDistance(float s0, float s1);
 
-        int debug = 0;
-        int color = 0;
+        bool color = DEFALUTE_COLOR;
         //图像中心像素数
         int img_xCenter;
         int img_yCenter;

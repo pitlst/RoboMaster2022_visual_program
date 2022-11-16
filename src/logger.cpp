@@ -107,29 +107,29 @@ void logger::log(Level level, const std::string & input)
     //获取系统时间
     time_t rawtime = time(nullptr);
     struct tm *ptminfo = localtime(&rawtime);
-    std::stringstream ss;
+    std::stringstream m_ss;
     //写入系统时间
-    ss << ptminfo->tm_year + 1900;
-    ss << "-";
-    ss << ptminfo->tm_mon + 1;
-    ss << "-";
-    ss << ptminfo->tm_mday;
-    ss << " ";
-    ss << ptminfo->tm_hour;
-    ss << ":";
-    ss << ptminfo->tm_min;
-    ss << ":";
-    ss << ptminfo->tm_sec;
-    ss << ": ";
-    ss << label[level];
-    ss << " :: ";
-    ss << input;
+    m_ss << ptminfo->tm_year + 1900;
+    m_ss << "-";
+    m_ss << ptminfo->tm_mon + 1;
+    m_ss << "-";
+    m_ss << ptminfo->tm_mday;
+    m_ss << " ";
+    m_ss << ptminfo->tm_hour;
+    m_ss << ":";
+    m_ss << ptminfo->tm_min;
+    m_ss << ":";
+    m_ss << ptminfo->tm_sec;
+    m_ss << ": ";
+    m_ss << label[level];
+    m_ss << " :: ";
+    m_ss << input;
     //写入命令行
-    std::cout << ss.str() << std::endl;
+    std::cout << m_ss.str();
     //写入文件
     if(!m_filename.empty())
     {
-        m_file << ss.str() << std::endl;
+        m_file << m_ss.str();
     }
 }
     

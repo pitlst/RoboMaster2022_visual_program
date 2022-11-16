@@ -3,6 +3,7 @@
 #include <string>
 #include <map>
 
+#include "debug.hpp"
 
 namespace swq
 {

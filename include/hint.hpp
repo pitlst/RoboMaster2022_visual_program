@@ -3,6 +3,8 @@
 #include <vector>
 #include <deque>
 
+#include "debug.hpp"
+
 namespace swq
 {
     class hyperint

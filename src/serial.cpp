@@ -13,6 +13,7 @@ using namespace swq;
 
 Serial::Serial()
 {
+#ifndef SERIAL_CLOSE
     fd = open(PATH_SERIAL, O_RDWR | O_NOCTTY | O_NDELAY);
     if (-1 == fd)
     {
@@ -27,18 +28,22 @@ Serial::Serial()
     }
     m_file.seekg(0, std::ios::end);
 #endif
+#endif
 }
 
 Serial::~Serial()
 {
+#ifndef SERIAL_CLOSE
     close(fd);
 #ifdef SAVE_SERIAL_INPUT
     m_file.close();
+#endif
 #endif
 }
 
 std::vector<int> Serial::get_msg()
 {
+#ifndef SERIAL_CLOSE
     int nread = read(fd, rbuff, sizeof(rbuff));
     if (nread > 0)
     {
@@ -69,18 +74,25 @@ std::vector<int> Serial::get_msg()
 #ifdef SAVE_SERIAL_INPUT
     for (auto ch : rbuff)
     {
-        m_file <<  ch;
+        m_file << ch;
     }
     m_file << std::endl;
 #endif
     std::vector<int> temp_return = {color, mode};
     return temp_return;
+#endif
+#ifdef SERIAL_CLOSE
+    std::vector<int> temp_return = {color, mode};
+    return temp_return;
+#endif
 }
 
 void Serial::send_msg(const std::vector<int> &msg)
 {
+#ifndef SERIAL_CLOSE
     sbuff[0] = msg[0];
     sbuff[1] = msg[1];
     sbuff[2] = msg[2];
-    write(fd, sbuff, sizeof(sbuff));
+    auto temp = write(fd, sbuff, sizeof(sbuff));
+#endif
 }

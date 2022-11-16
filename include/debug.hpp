@@ -1,6 +1,8 @@
 //本头文件用于定义常用宏,方便功能测试
 //注意，更改本文件后需要重新编译后运行
 #pragma once
+#include <cmath>
+#define _USE_MATH_DEFINES 
 
 //能量机关配置参数文件路径
 #define PATH_ENERGY_JSON "../asset/json/energy.json"
@@ -23,7 +25,7 @@
 //能量机关模式参数-大符
 #define BIG_ENERGY_BUFFER 8002
 //圆周率常数
-#define PI acos(-1)
+#define PI M_PI
 //默认的识别颜色
 #define DEFALUTE_COLOR 0
 //默认的击打模式
@@ -58,3 +60,5 @@
 //开启此宏定义启用GPU推理,不启用默认使用CPU
 #define GPU_INFER
 
+//开启此宏定义关闭串口,使用默认数据
+// #define SERIAL_CLOSE

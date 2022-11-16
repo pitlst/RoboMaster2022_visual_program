@@ -19,10 +19,10 @@ namespace swq
     {
     public:
         GetEnergyMac();
-        GetEnergyMac(int input_debug, int input_color, int input_mode);
+        GetEnergyMac(int input_mode);
         ~GetEnergyMac();
 
-        void set(int input_debug, int input_color, int input_mode);
+        void set(int input_mode);
         std::vector<int> process(cv::Mat & input_frame, double f_time);
 
         //存储目标的相关参数
@@ -103,9 +103,6 @@ namespace swq
         void vector_protect_process();
 
 
-        //类的状态标志位
-        int debug = 0;
-        int color = 0;
         //检测的开始时间
         double begin_time = 0;
         //能量机关的旋转模式

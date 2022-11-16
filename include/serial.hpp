@@ -1,6 +1,7 @@
 #pragma once
 #include <vector>
 #include <fstream>
+
 #include "debug.hpp"
 
 namespace swq

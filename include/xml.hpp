@@ -3,6 +3,8 @@
 #include <list>
 #include <map>
 
+#include "debug.hpp"
+
 namespace swq
 {
     class xml

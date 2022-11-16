@@ -18,7 +18,7 @@ asset存放其他的各项资源，包括测试用的视频，存放参数的jso
 
 ## 部署方式
 
-本项目使用cmake组织项目，依赖于opencv,openvino和eigen3
+本项目使用cmake组织项目，依赖于opencv,openvino
 
 在这里介绍本项目开发时环境的搭建，用于作为演示。
 

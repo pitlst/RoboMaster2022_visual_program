@@ -11,23 +11,14 @@ GetArmor::GetArmor()
     realCenter_list = new std::vector<std::vector<float>>();
 }
 
-GetArmor::GetArmor(int input_debug, int input_color)
-{
-    debug = input_debug;
-    color = input_color;
-    lightBarList = new std::vector<cv::RotatedRect>();
-    realCenter_list = new std::vector<std::vector<float>>();
-}
-
 GetArmor::~GetArmor()
 {
     delete lightBarList;
     delete realCenter_list;
 }
 
-void GetArmor::set(int input_debug, int input_color)
+void GetArmor::set(bool input_color)
 {
-    debug = input_debug;
     color = input_color;
 }
 
@@ -39,7 +30,7 @@ void GetArmor::load_json()
     load_armor.parse(get_file_str(PATH_ARMOR_JSON));
     load_camera.parse(get_file_str(PATH_CAMERA_JSON));
     
-    if (color == 0)
+    if (color == false)
     {
         load_par.lowHue = load_armor["ImageProcess_red"]["hsvPara_low"][0];
         load_par.lowSat = load_armor["ImageProcess_red"]["hsvPara_low"][1];
@@ -48,7 +39,7 @@ void GetArmor::load_json()
         load_par.highSat = load_armor["ImageProcess_red"]["hsvPara_high"][1];
         load_par.highVal = load_armor["ImageProcess_red"]["hsvPara_high"][2];
     }
-    else if (color == 1)
+    else if (color == true)
     {
         load_par.lowHue = load_armor["ImageProcess_blue"]["hsvPara_low"][0];
         load_par.lowSat = load_armor["ImageProcess_blue"]["hsvPara_low"][1];
@@ -102,7 +93,6 @@ void GetArmor::load_json()
     img_xCenter = load_camera["Aimbot"]["width"].Int() / 2;
     img_yCenter = load_camera["Aimbot"]["height"].Int() / 2;
     load_armor.clear();
-    load_sentry.clear();
     load_camera.clear();
 }
 

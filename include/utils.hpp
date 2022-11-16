@@ -1,6 +1,8 @@
 #pragma once
 #include <string>
 
+#include "debug.hpp"
+
 namespace swq
 {
     //读取文件转换成字符串，支持string格式路径和char格式路径
