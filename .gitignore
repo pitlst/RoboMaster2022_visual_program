@@ -2,4 +2,6 @@ build/*
 asset/log.txt
 asset/com.txt
 asset/openvino-GPU
+asset/test.avi
+asset/test.bmp
 3rd_part/*

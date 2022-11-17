@@ -61,4 +61,4 @@
 #define GPU_INFER
 
 //开启此宏定义关闭串口,使用默认数据
-// #define SERIAL_CLOSE
+#define SERIAL_CLOSE
