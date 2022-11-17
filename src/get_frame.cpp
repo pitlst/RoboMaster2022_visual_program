@@ -66,7 +66,7 @@ void GetFrame::read_json(const std::string &input_filename)
     }
     else
     {
-        log_error("不知道的模式");
+        log_error("不知道的模式 ", mode);
         m_camera.width = 200;
         m_camera.height = 200;
         m_camera.exposure_time = 2000;
@@ -106,8 +106,7 @@ void GetFrame::StartCamera()
             nRet = MV_CC_EnumDevices(MV_GIGE_DEVICE | MV_USB_DEVICE, &stDeviceList);
             if (MV_OK != nRet)
             {
-                log_error("海康sdk初始化失败,错误码:");
-                log_error(nRet);
+                log_error("海康sdk初始化失败,错误码:", nRet);
                 break;
             }
             if (stDeviceList.nDeviceNum > 0)
@@ -131,8 +130,6 @@ void GetFrame::StartCamera()
             }
             log_info("默认索引设备0");
             unsigned int nIndex = 0;
-            // log_info(nIndex);
-            // std::cin >> nIndex;
             if (nIndex >= stDeviceList.nDeviceNum)
             {
                 log_error("Intput error!\n");
@@ -142,16 +139,14 @@ void GetFrame::StartCamera()
             nRet = MV_CC_CreateHandle(&handle, stDeviceList.pDeviceInfo[nIndex]);
             if (MV_OK != nRet)
             {
-                log_error("MV_CC_CreateHandle失败,错误码:");
-                log_error(nRet);
+                log_error("MV_CC_CreateHandle失败,错误码:", nRet);
                 break;
             }
             //打开设备
             nRet = MV_CC_OpenDevice(handle);
             if (MV_OK != nRet)
             {
-                log_error("MV_CC_OpenDevice失败,错误码:");
-                log_error(nRet);
+                log_error("MV_CC_OpenDevice失败,错误码:", nRet);
                 break;
             }
             //设置触发模式为off
@@ -160,16 +155,14 @@ void GetFrame::StartCamera()
             nRet = MV_CC_SetEnumValue(handle, "TriggerMode", 0);
             if (MV_OK != nRet)
             {
-                log_error("MV_CC_SetTriggerMode失败,错误码:");
-                log_error(nRet);
+                log_error("MV_CC_SetTriggerMode失败,错误码:", nRet);
                 break;
             }
             //开始取流
             nRet = MV_CC_StartGrabbing(handle);
             if (MV_OK != nRet)
             {
-                log_error("MV_CC_StartGrabbing失败,错误码:");
-                log_error(nRet);
+                log_error("MV_CC_StartGrabbing失败,错误码:", nRet);
                 break;
             }
             //获取数据包大小
@@ -178,8 +171,7 @@ void GetFrame::StartCamera()
             nRet = MV_CC_GetIntValue(handle, "PayloadSize", &stParam);
             if (MV_OK != nRet)
             {
-                log_error("获取数据包大小失败,错误码:");
-                log_error(nRet);
+                log_error("获取数据包大小失败,错误码:", nRet);
                 break;
             }
 
@@ -199,6 +191,7 @@ void GetFrame::StartCamera()
                 MV_CC_DestroyHandle(handle);
                 handle = nullptr;
             }
+            log_error("相机开启失败");
             throw std::logic_error("相机开启失败");
         }
     }
@@ -226,8 +219,7 @@ cv::Mat &GetFrame::GetOneFrame()
             }
             else
             {
-                log_error("没有数据,错误码:");
-                log_error(nRet);
+                log_error("没有数据,错误码:", nRet);
             }
         }
     }
@@ -308,18 +300,14 @@ bool GetFrame::PrintDeviceInfo(MV_CC_DEVICE_INFO *pstMVDevInfo)
         int nIp3 = ((pstMVDevInfo->SpecialInfo.stGigEInfo.nCurrentIp & 0x0000ff00) >> 8);
         int nIp4 = (pstMVDevInfo->SpecialInfo.stGigEInfo.nCurrentIp & 0x000000ff);
 
-        log_info("设备名称为");
-        log_info(pstMVDevInfo->SpecialInfo.stGigEInfo.chModelName);
-        log_info("用户定义的名称为");
-        log_info(pstMVDevInfo->SpecialInfo.stGigEInfo.chUserDefinedName);
+        log_info("设备名称为: ", pstMVDevInfo->SpecialInfo.stGigEInfo.chModelName);
+        log_info("用户定义的名称为: ", pstMVDevInfo->SpecialInfo.stGigEInfo.chUserDefinedName);
         log_info("暂时不支持IP相机");
     }
     else if (pstMVDevInfo->nTLayerType == MV_USB_DEVICE)
     {
-        log_info("设备名称为");
-        log_info(pstMVDevInfo->SpecialInfo.stUsb3VInfo.chModelName);
-        log_info("用户定义的名称为");
-        log_info(pstMVDevInfo->SpecialInfo.stUsb3VInfo.chUserDefinedName);
+        log_info("设备名称为: ", pstMVDevInfo->SpecialInfo.stUsb3VInfo.chModelName);
+        log_info("用户定义的名称为: ", pstMVDevInfo->SpecialInfo.stUsb3VInfo.chUserDefinedName);
     }
     else
     {
@@ -348,16 +336,14 @@ void GetFrame::EndCamera()
                 nRet = MV_CC_CloseDevice(handle);
                 if (MV_OK != nRet)
                 {
-                    log_error("MV_CC_CloseDevice失败,错误码:");
-                    log_error(nRet);
+                    log_error("MV_CC_CloseDevice失败,错误码:", nRet);
                     break;
                 }
                 //销毁句柄
                 nRet = MV_CC_DestroyHandle(handle);
                 if (MV_OK != nRet)
                 {
-                    log_error("MV_CC_DestroyHandle失败,错误码:");
-                    log_error(nRet);
+                    log_error("MV_CC_DestroyHandle失败,错误码:", nRet);
                     break;
                 }
             } while (0);

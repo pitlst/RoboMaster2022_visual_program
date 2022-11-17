@@ -69,7 +69,9 @@ namespace swq
         {
             ss << input << std::endl;
             auto temp = ss.str();
+            //清空保存的字符串
             ss.str(std::string());
+            //字符串流复位
             ss.clear();
             return temp; 
         }
