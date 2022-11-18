@@ -67,7 +67,7 @@ namespace swq
         template <typename T>
         std::string format(const T &input)
         {
-            ss << input << std::endl;
+            ss << input;
             auto temp = ss.str();
             //清空保存的字符串
             ss.str(std::string());

@@ -21,9 +21,11 @@
 //模型文件路径
 #define PATH_MODEL_FILE "../asset/model/bestyao_13_416.xml"
 //能量机关模式参数-小符
-#define SMALL_ENERGY_BUFFER 8001
+#define SMALL_ENERGY_BUFFER 1
 //能量机关模式参数-大符
-#define BIG_ENERGY_BUFFER 8002
+#define BIG_ENERGY_BUFFER 2
+//chono系统时钟调用单位转换常数
+#define TIME_TRANSFORMER 1000000000
 //圆周率常数
 #define PI M_PI
 //默认的识别颜色
@@ -61,4 +63,4 @@
 #define GPU_INFER
 
 //开启此宏定义关闭串口,使用默认数据
-#define SERIAL_CLOSE
+//#define SERIAL_CLOSE

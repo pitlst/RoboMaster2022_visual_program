@@ -1,3 +1,4 @@
+//linux系统的头文件
 #include <fcntl.h>
 #include <unistd.h>
 #include <sys/stat.h>

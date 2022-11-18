@@ -1,41 +1,44 @@
 #include <iostream>
+#include <chrono>
+
 #include "logger.hpp"
 #include "debug.hpp"
+
 using namespace swq;
 
 logger::logger()
 {
-    #ifdef NO_LOG
+#ifdef NO_LOG
     m_level = NONE;
-    #else
-        #ifdef COMPILE_DEBUG
-        m_level = DEBUG;
-        #endif
-        #ifdef COMPILE_RELEASE
-        m_level = INFO;
-        #endif
-        #ifdef COMPILE_MINSIZEREL
-        m_level = FATAL;
-        #endif
-    #endif
+#else
+#ifdef COMPILE_DEBUG
+    m_level = DEBUG;
+#endif
+#ifdef COMPILE_RELEASE
+    m_level = INFO;
+#endif
+#ifdef COMPILE_MINSIZEREL
+    m_level = FATAL;
+#endif
+#endif
     open("");
 }
 
-logger::logger(const std::string & filepath)
+logger::logger(const std::string &filepath)
 {
-    #ifdef NO_LOG
+#ifdef NO_LOG
     m_level = NONE;
-    #else
-        #ifdef COMPILE_DEBUG
-        m_level = DEBUG;
-        #endif
-        #ifdef COMPILE_RELEASE
-        m_level = INFO;
-        #endif
-        #ifdef COMPILE_MINSIZEREL
-        m_level = FATAL;
-        #endif
-    #endif
+#else
+#ifdef COMPILE_DEBUG
+    m_level = DEBUG;
+#endif
+#ifdef COMPILE_RELEASE
+    m_level = INFO;
+#endif
+#ifdef COMPILE_MINSIZEREL
+    m_level = FATAL;
+#endif
+#endif
     open(filepath);
 }
 
@@ -44,25 +47,25 @@ logger::~logger()
     close();
 }
 
-logger & logger::instance()
+logger &logger::instance()
 {
-	static logger m_instance(PATH_LOG_FILE);
+    static logger m_instance(PATH_LOG_FILE);
     return m_instance;
 }
 
 void logger::set_level(Level input_level)
 {
-    #ifdef NO_LOG
+#ifdef NO_LOG
     m_level = NONE;
-    #else
+#else
     m_level = input_level;
-    #endif
+#endif
 }
 
 void logger::open(const std::string &filename)
 {
     m_filename = filename;
-    if(m_filename.empty())
+    if (m_filename.empty())
     {
         return;
     }
@@ -75,7 +78,7 @@ void logger::open(const std::string &filename)
     //将文件指针定位到文件的末尾
     m_file.seekg(0, std::ios::end);
     //获取系统时间
-    time_t rawtime = time(nullptr);
+    time_t rawtime = std::chrono::system_clock::to_time_t(std::chrono::high_resolution_clock::now());
     struct tm *ptminfo = localtime(&rawtime);
     std::stringstream ss;
     ss << ptminfo->tm_year + 1900;
@@ -94,7 +97,7 @@ void logger::open(const std::string &filename)
     m_file << "----------" << ss.str() << "----------" << std::endl;
 }
 
-void logger::log(Level level, const std::string & input)
+void logger::log(Level level, const std::string &input)
 {
     if (m_level > level)
     {
@@ -105,7 +108,7 @@ void logger::log(Level level, const std::string & input)
         throw std::logic_error("open log file failed: " + m_filename);
     }
     //获取系统时间
-    time_t rawtime = time(nullptr);
+    time_t rawtime = std::chrono::system_clock::to_time_t(std::chrono::high_resolution_clock::now());
     struct tm *ptminfo = localtime(&rawtime);
     std::stringstream m_ss;
     //写入系统时间
@@ -125,18 +128,17 @@ void logger::log(Level level, const std::string & input)
     m_ss << " :: ";
     m_ss << input;
     //写入命令行
-    std::cout << m_ss.str();
+    std::cout << m_ss.str() << std::endl;
     //写入文件
-    if(!m_filename.empty())
+    if (!m_filename.empty())
     {
-        m_file << m_ss.str();
+        m_file << m_ss.str() << std::endl;
     }
 }
-    
 
 void logger::close()
 {
-    if(m_filename.empty())
+    if (m_filename.empty())
     {
         return;
     }

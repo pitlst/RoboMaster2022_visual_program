@@ -25,18 +25,11 @@
 TOE实验室算法组---打符/自瞄程序C++版
 @作者：孙墨明
 */
-
-// c++库函数
-#include <iostream>
-#include <fstream>
-#include <sstream>
 #include <thread>
-
-//多线程
-#include <queue>
+#include <vector>
 #include <mutex>
-#include <condition_variable>
-
+#include <chrono>
+//相关声明
 #include "get_frame.hpp"
 #include "aimbot.hpp"
 #include "energy.hpp"
@@ -45,15 +38,176 @@ TOE实验室算法组---打符/自瞄程序C++版
 #include "hint.hpp"
 #include "logger.hpp"
 #include "xml.hpp"
-#include "debug.hpp"
 #include "serial.hpp"
+//系统库
+#include <signal.h>
 
-//全局变量声明
+//全局标志位:模式与颜色
+int mode;
+bool color;
+//类初始化时间
+std::chrono::_V2::system_clock::time_point start_t;
+//使用的类初始化
+swq::Serial serial_com;
+swq::GetFrame capture;
+swq::GetArmor aimbot;
+swq::GetEnergyMac buffer;
+//图像队列
+std::queue<cv::Mat> img_queue;
+//图像的时间戳队列
+std::queue<double> time_queue;
+//图像队列的互斥锁
+std::mutex img_mtx;
+//串口消息队列
+std::queue<std::vector<int>> msg_queue;
+//串口队列的互斥锁
+std::mutex msg_mtx;
+//用于处理控制台回调的标志位
+volatile sig_atomic_t flag = 0;
+//用于通知线程终止的标志位
+volatile bool return_flag = false;
 
+void frame_th()
+{
+    while (1)
+    {
+        auto frame = capture.GetOneFrame();
+        auto time = std::chrono::high_resolution_clock::now() - start_t;
+
+        img_mtx.lock();
+        img_queue.push(frame);
+        time_queue.push(time.count() / TIME_TRANSFORMER);
+        img_mtx.unlock();
+        //线程退出
+        if (return_flag)
+        {
+            return;
+        }
+    }
+}
+
+void process_th()
+{
+    cv::Mat frame;
+    double time;
+    std::vector<int> msg = {-1, -1, -1};
+    while (1)
+    {
+        img_mtx.lock();
+        while (img_queue.empty() || time_queue.empty())
+        {
+            //等待20毫秒再去获取图像
+            img_mtx.unlock();
+            std::this_thread::sleep_for(std::chrono::milliseconds(20));
+            img_mtx.lock();
+        }
+        frame = img_queue.front();
+        time = time_queue.front();
+        img_queue.pop();
+        time_queue.pop();
+        img_mtx.unlock();
+        if (mode == 0)
+        {
+            msg = aimbot.process(frame);
+        }
+        else if (mode == 1 || mode == 2)
+        {
+            msg = buffer.process(frame, time);
+        }
+        else
+        {
+            msg = std::vector<int>{-1, -1, -1};
+        }
+        msg_mtx.lock();
+        msg_queue.push(msg);
+        msg_mtx.unlock();
+        //线程退出
+        if (return_flag)
+        {
+            return;
+        }
+    }
+}
+
+void serial_th()
+{
+    std::vector<int> msg = {-1, -1, -1};
+    while (1)
+    {
+        msg_mtx.lock();
+        if (!msg_queue.empty())
+        {
+            msg = msg_queue.front();
+            msg_queue.pop();
+        }
+        msg_mtx.unlock();
+        serial_com.send_msg(msg);
+        //线程退出
+        if (return_flag)
+        {
+            return;
+        }
+    }
+}
+
+//重载控制台输入强制终止回调函数
+static void my_handler(int sig)
+{
+    flag = 1;
+}
 
 int main()
 {
-    log_debug("程序开始");
+    log_debug("程序开始", 0);
+    //接收并处理控制台输入
+    signal(SIGINT, my_handler);
+
+    std::vector<int> msg_first = serial_com.get_msg();
+    color = msg_first[0];
+    mode = msg_first[1];
+    capture.set("HIVISION", mode);
+    aimbot.set(color);
+    buffer.set(mode);
+    //开始记录初始化时间
+    start_t = std::chrono::high_resolution_clock::now();
+
+    std::thread frame_thread(frame_th);
+    std::thread process_thread(process_th);
+    std::thread serial_thread(serial_th);
+
+    // while (1)
+    // {
+    //     auto frame = capture.GetOneFrame();
+    //     cv::imshow("frame", frame);
+    //     auto k = cv::waitKey(1);
+    //     if (k == 27)
+    //     {
+    //         break;
+    //     }
+    // }
+
+    while (1)
+    {
+        //检测到强行终止进行资源释放
+        if (flag)
+        {
+            return_flag = true;
+            log_debug("正在等待线程停止...");
+            frame_thread.join();
+            process_thread.join();
+            serial_thread.join();
+            log_debug("正在等待资源释放...");
+            //清空各自的队列
+            std::queue<cv::Mat> temp0;
+            std::queue<double> temp1;
+            std::queue<std::vector<int>> temp2;
+            img_queue.swap(temp0);
+            time_queue.swap(temp1);
+            msg_queue.swap(temp2);
+            break;
+        }
+    }
+
     log_debug("程序结束");
     return 0;
 }

@@ -20,9 +20,11 @@ namespace swq
     class GetFrame
     {
     public:
+        GetFrame();
         GetFrame(const std::string & source_path, int input_mode);
         ~GetFrame();
 
+        void set(const std::string &source_path, int input_mode);
         void restart_camera(int input_mode);
         cv::Mat & GetOneFrame();
         void EndCamera();

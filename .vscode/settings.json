@@ -84,7 +84,8 @@
         "jacobi": "cpp",
         "lu": "cpp",
         "qr": "cpp",
-        "svd": "cpp"
+        "svd": "cpp",
+        "csignal": "cpp"
     }
     
 }

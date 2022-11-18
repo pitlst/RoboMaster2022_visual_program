@@ -3,6 +3,10 @@
 #include <iostream>
 using namespace swq;
 
+GetFrame::GetFrame()
+{
+}
+
 GetFrame::GetFrame(const std::string &source_path, int input_mode)
 {
     mode = input_mode;
@@ -34,6 +38,36 @@ GetFrame::~GetFrame()
     file.clear();
 }
 
+void GetFrame::set(const std::string &source_path, int input_mode)
+{
+    if (source_path == "HIVISION")
+    {
+        log_debug("来源:海康相机");
+        video_debug_set = 0;
+    }
+    else if (is_Numeric(source_path))
+    {
+        log_debug("来源:USB相机");
+        video_debug_set = 1;
+    }
+    else
+    {
+        log_debug("来源:视频");
+        video_debug_set = 2;
+    }
+    if (open_label)
+    {
+        restart_camera(input_mode);
+    }
+    else
+    {
+        mode = input_mode;
+        source = source_path;
+        read_json(PATH_CAMERA_JSON);
+        StartCamera();
+    }
+}
+
 void GetFrame::restart_camera(int input_mode)
 {
     mode = input_mode;
@@ -46,9 +80,9 @@ void GetFrame::read_json(const std::string &input_filename)
 {
     file.parse(get_file_str(input_filename));
     // mode参数含义：
-    // 0为自瞄，1为哨兵模式
-    // 2为能量机关小幅，3为能量机关大符
-    if (mode == 0 || mode == 1)
+    // 0为自瞄
+    // 1为能量机关小幅，2为能量机关大符
+    if (mode == 0)
     {
         m_camera.width = file["Aimbot"]["width"];
         m_camera.height = file["Aimbot"]["height"];
@@ -56,7 +90,7 @@ void GetFrame::read_json(const std::string &input_filename)
         m_camera.offsetX = file["Aimbot"]["offsetX"];
         m_camera.offsetY = file["Aimbot"]["offsetY"];
     }
-    else if (mode == 0 || mode == 1)
+    else if (mode == 1 || mode == 2)
     {
         m_camera.width = file["Energy_mac"]["width"];
         m_camera.height = file["Energy_mac"]["height"];
@@ -158,6 +192,143 @@ void GetFrame::StartCamera()
                 log_error("MV_CC_SetTriggerMode失败,错误码:", nRet);
                 break;
             }
+            // ch：设置曝光时间，图像的长宽,和所取图像的偏移
+            //注意，这里对offset的值应当提前归零，防止出现长度溢出问题
+            nRet = MV_CC_SetIntValue(handle, "OffsetX", 0);
+            if (MV_OK != nRet)
+            {
+                log_error("设置OffsetX错误,错误码:", nRet);
+                break;
+            }
+            nRet = MV_CC_SetIntValue(handle, "OffsetY", 0);
+            if (MV_OK != nRet)
+            {
+                log_error("设置OffsetX错误,错误码:", nRet);
+                break;
+            }
+            nRet = MV_CC_SetFloatValue(handle, "ExposureTime", m_camera.exposure_time);
+            if (MV_OK != nRet)
+            {
+                log_error("设置曝光错误,错误码:", nRet);
+                break;
+            }
+            nRet = MV_CC_SetIntValue(handle, "Width", m_camera.width);
+            if (MV_OK != nRet)
+            {
+                log_error("设置Width错误,错误码:", nRet);
+                break;
+            }
+            nRet = MV_CC_SetIntValue(handle, "Height", m_camera.height);
+            if (MV_OK != nRet)
+            {
+                log_error("设置Height错误,错误码:", nRet);
+                break;
+            }
+            nRet = MV_CC_SetIntValue(handle, "OffsetX", m_camera.offsetX);
+            if (MV_OK != nRet)
+            {
+                log_error("设置Height错误,错误码:", nRet);
+                break;
+            }
+            nRet = MV_CC_SetIntValue(handle, "OffsetY", m_camera.offsetY);
+            if (MV_OK != nRet)
+            {
+                log_error("设置Height错误,错误码:", nRet);
+                break;
+            }
+            // RGB格式0x02180014
+            // bayerRG格式0x01080009
+            nRet = MV_CC_SetEnumValue(handle, "PixelFormat", 0x01080009);
+            if (MV_OK != nRet)
+            {
+                log_error("设置传输图像格式错误,错误码:", nRet);
+                break;
+            }
+            nRet = MV_CC_SetEnumValue(handle, "TestPattern", 0);
+            if (MV_OK != nRet)
+            {
+                log_error("设置设置关闭测试模式错误,错误码:", nRet);
+                break;
+            }
+            nRet = MV_CC_SetBoolValue(handle, "FrameSpecInfo", 0);
+            if (MV_OK != nRet)
+            {
+                log_error("设置关闭帧水印错误,错误码:", nRet);
+                break;
+            }
+            nRet = MV_CC_SetEnumValue(handle, "AcquisitionMode", 2);
+            if (MV_OK != nRet)
+            {
+                log_error("设置设备采集模式错误,错误码:", nRet);
+                break;
+            }
+            nRet = MV_CC_SetFloatValue(handle, "AcquisitionFrameRate", 999.0);
+            if (MV_OK != nRet)
+            {
+                log_error("设置获取帧率最大值错误,错误码:", nRet);
+                break;
+            }
+            nRet = MV_CC_SetBoolValue(handle, "AcquisitionFrameRateEnable", 1);
+            if (MV_OK != nRet)
+            {
+                log_error("启用对摄像机帧速率的手动控制错误,错误码:", nRet);
+                break;
+            }
+            nRet = MV_CC_SetEnumValue(handle, "ExposureMode", 0);
+            if (MV_OK != nRet)
+            {
+                log_error("设置曝光模式错误,错误码:", nRet);
+                break;
+            }
+            nRet = MV_CC_SetEnumValue(handle, "ExposureAuto", 0);
+            if (MV_OK != nRet)
+            {
+                log_error("关闭自动曝光错误,错误码:", nRet);
+                break;
+            }
+            nRet = MV_CC_SetBoolValue(handle, "HDREnable", 0);
+            if (MV_OK != nRet)
+            {
+                log_error("关闭HDR轮询错误,错误码:", nRet);
+                break;
+            }
+            nRet = MV_CC_SetFloatValue(handle, "Gain", 0.0);
+            if (MV_OK != nRet)
+            {
+                log_error("设置增益错误,错误码:", nRet);
+                break;
+            }
+            nRet = MV_CC_SetEnumValue(handle, "GainAuto", 0);
+            if (MV_OK != nRet)
+            {
+                log_error("关闭自动增益错误,错误码:", nRet);
+                break;
+            }
+            nRet = MV_CC_SetBoolValue(handle, "BlackLevelEnable", 1);
+            if (MV_OK != nRet)
+            {
+                log_error("开启黑电平调整错误,错误码:", nRet);
+                break;
+            }
+            nRet = MV_CC_SetIntValue(handle, "BlackLevel", 100);
+            if (MV_OK != nRet)
+            {
+                log_error("开启黑电平调整错误,错误码:", nRet);
+                break;
+            }
+            nRet = MV_CC_SetEnumValue(handle, "BalanceWhiteAuto", 2);
+            if (MV_OK != nRet)
+            {
+                log_error("关闭连续自动白平衡错误,错误码:", nRet);
+                break;
+            }
+            nRet = MV_CC_SetBoolValue(handle, "AutoFunctionAOIUsageIntensity", 0);
+            if (MV_OK != nRet)
+            {
+                log_error("关闭自动AOI错误,错误码:", nRet);
+                break;
+            }
+
             //开始取流
             nRet = MV_CC_StartGrabbing(handle);
             if (MV_OK != nRet)
@@ -212,6 +383,7 @@ cv::Mat &GetFrame::GetOneFrame()
         }
         else
         {
+
             auto nRet = MV_CC_GetOneFrameTimeout(handle, pData, nDataSize, &stImageInfo, 1000);
             if (nRet == MV_OK)
             {
@@ -220,6 +392,7 @@ cv::Mat &GetFrame::GetOneFrame()
             else
             {
                 log_error("没有数据,错误码:", nRet);
+                throw std::logic_error("相机启动失败");
             }
         }
     }
@@ -238,38 +411,38 @@ void GetFrame::Convert2Mat()
         return;
     }
     else
-    {                                                                                                                                                       
-        if(PixelType_Gvsp_Mono8 == stImageInfo.enPixelType)              // Mono8类型
+    {
+        if (PixelType_Gvsp_Mono8 == stImageInfo.enPixelType) // Mono8类型
         {
             frame = cv::Mat(stImageInfo.nHeight, stImageInfo.nWidth, CV_8UC1, pData);
         }
-        else if(PixelType_Gvsp_RGB8_Packed == stImageInfo.enPixelType)   // RGB8类型
+        else if (PixelType_Gvsp_RGB8_Packed == stImageInfo.enPixelType) // RGB8类型
         {
             // Mat像素排列格式为BGR，需要转换
             RGB2BGR(pData, stImageInfo.nWidth, stImageInfo.nHeight);
             frame = cv::Mat(stImageInfo.nHeight, stImageInfo.nWidth, CV_8UC3, pData);
-            cv::cvtColor(frame,frame,cv::COLOR_BGR2RGB);
+            cv::cvtColor(frame, frame, cv::COLOR_BGR2RGB);
         }
-        else if(PixelType_Gvsp_BayerRG8 == stImageInfo.enPixelType)      // BayerRG8类型
+        else if (PixelType_Gvsp_BayerRG8 == stImageInfo.enPixelType) // BayerRG8类型
         {
             //先转换成opencv的格式
             frame = cv::Mat(stImageInfo.nHeight, stImageInfo.nWidth, CV_8UC1, pData);
-            cv::cvtColor(frame,frame,cv::COLOR_BayerRG2RGB);
+            cv::cvtColor(frame, frame, cv::COLOR_BayerRG2RGB);
         }
         else
         {
             log_error("抱歉,不支持该图像格式");
-        }        
+        }
     }
-    if ( nullptr == frame.data )
+    if (nullptr == frame.data)
     {
         log_error("图像创建失败");
     }
 }
 
-void GetFrame::RGB2BGR(unsigned char* pRgbData, unsigned int nWidth, unsigned int nHeight)
+void GetFrame::RGB2BGR(unsigned char *pRgbData, unsigned int nWidth, unsigned int nHeight)
 {
-    if (nullptr == pRgbData )
+    if (nullptr == pRgbData)
     {
         return;
     }
@@ -280,7 +453,7 @@ void GetFrame::RGB2BGR(unsigned char* pRgbData, unsigned int nWidth, unsigned in
         for (unsigned int i = 0; i < nWidth; i++)
         {
             unsigned char red = pRgbData[j * (nWidth * 3) + i * 3];
-            pRgbData[j * (nWidth * 3) + i * 3]     = pRgbData[j * (nWidth * 3) + i * 3 + 2];
+            pRgbData[j * (nWidth * 3) + i * 3] = pRgbData[j * (nWidth * 3) + i * 3 + 2];
             pRgbData[j * (nWidth * 3) + i * 3 + 2] = red;
         }
     }
