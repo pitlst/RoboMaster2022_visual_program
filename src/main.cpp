@@ -39,6 +39,7 @@ TOE实验室算法组---打符/自瞄程序C++版
 #include "logger.hpp"
 #include "xml.hpp"
 #include "serial.hpp"
+#include "debug.hpp"
 //系统库
 #include <signal.h>
 
@@ -150,6 +151,24 @@ void serial_th()
     }
 }
 
+void debug_th()
+{
+    //先等一等正常的处理线程
+    std::this_thread::sleep_for(std::chrono::milliseconds(800));
+    while (1)
+    {
+        auto debug_frame = aimbot.debug_frame();
+        cv::imshow("frame_debug", debug_frame.front());
+        cv::imshow("mask_debug", debug_frame.back());
+        auto k = cv::waitKey(1);
+        if (k == 27)
+        {
+            flag = 1;
+            break;
+        }
+    }
+}
+
 //重载控制台输入强制终止回调函数
 static void my_handler(int sig)
 {
@@ -158,7 +177,7 @@ static void my_handler(int sig)
 
 int main()
 {
-    log_debug("程序开始", 0);
+    log_debug("程序开始");
     //接收并处理控制台输入
     signal(SIGINT, my_handler);
 
@@ -170,21 +189,11 @@ int main()
     buffer.set(mode);
     //开始记录初始化时间
     start_t = std::chrono::high_resolution_clock::now();
-
+#ifndef THREADING_DEBUG
     std::thread frame_thread(frame_th);
     std::thread process_thread(process_th);
     std::thread serial_thread(serial_th);
-
-    // while (1)
-    // {
-    //     auto frame = capture.GetOneFrame();
-    //     cv::imshow("frame", frame);
-    //     auto k = cv::waitKey(1);
-    //     if (k == 27)
-    //     {
-    //         break;
-    //     }
-    // }
+    std::thread debug_thread(debug_th);
 
     while (1)
     {
@@ -196,6 +205,7 @@ int main()
             frame_thread.join();
             process_thread.join();
             serial_thread.join();
+            debug_thread.join();
             log_debug("正在等待资源释放...");
             //清空各自的队列
             std::queue<cv::Mat> temp0;
@@ -207,7 +217,28 @@ int main()
             break;
         }
     }
-
+#endif
+#ifdef THREADING_DEBUG
+    std::vector<int> msg = {-1, -1, -1};
+    while (1)
+    {
+        auto frame = capture.GetOneFrame();
+        auto time = (std::chrono::high_resolution_clock::now() - start_t).count() / TIME_TRANSFORMER;
+        if (mode == 0)
+        {
+            msg = aimbot.process(frame);
+        }
+        else if (mode == 1 || mode == 2)
+        {
+            msg = buffer.process(frame, time);
+        }
+        else
+        {
+            msg = std::vector<int>{-1, -1, -1};
+        }
+        serial_com.send_msg(msg);
+    }
+#endif
     log_debug("程序结束");
     return 0;
 }

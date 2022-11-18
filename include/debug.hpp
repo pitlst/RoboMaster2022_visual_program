@@ -32,6 +32,16 @@
 #define DEFALUTE_COLOR 0
 //默认的击打模式
 #define DEFALUTE_MODE 0
+//debug下灯条的默认颜色
+#define LIGHTBAR_COLOR (0,255,0)
+//debug下灯条的默认颜色
+#define ARMOR_COLOR (0,255,255)
+//debug下灯条的默认颜色
+#define TEXT_COLOR (255,255,255)
+//debug下图像的默认线宽
+#define FRAME_THICKNESS 2
+
+
 
 // nms参数
 //这是模型的目标置信度阈值
@@ -63,4 +73,7 @@
 #define GPU_INFER
 
 //开启此宏定义关闭串口,使用默认数据
-//#define SERIAL_CLOSE
+#define SERIAL_CLOSE
+
+//开启此宏定义关闭多线程
+// #define THREADING_DEBUG

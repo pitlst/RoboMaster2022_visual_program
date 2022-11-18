@@ -77,6 +77,13 @@ namespace swq
             json kh;
         };
 
+        // debug下用于返回图像
+        std::list<cv::Mat> debug_frame();
+        // debug下更新筛选参数
+        void updata_argument(const fiter_para &input);
+        // debug下json文件里的参数
+        void update_json(const std::string &filename);
+
     private:
         //将输入图像处理成hsv格式，然后通过阈值转换成二值图
         void HSV_Process();
@@ -87,6 +94,7 @@ namespace swq
         //单目测距
         float GetArmorDistance(float s0, float s1);
 
+        int start_label = 0;
         bool color = DEFALUTE_COLOR;
         //图像中心像素数
         int img_xCenter;
@@ -100,24 +108,5 @@ namespace swq
         std::vector<std::vector<float>> *realCenter_list;
         armor_final armor;
         fiter_para load_par;
-
-#ifdef COMPILE_DEBUG
-    public:
-        // debug下用于返回图像
-        std::list<cv::Mat> debug_frame();
-
-    private:
-        // debug下更新筛选参数
-        void updata_argument();
-        // debug下json文件里的参数
-        void update_json();
-
-        //加载的参数
-        json load_armor;
-        json load_sentry;
-        json load_camera;
-        //参数文件路径
-        std::string file_name;
-#endif
     };
 }

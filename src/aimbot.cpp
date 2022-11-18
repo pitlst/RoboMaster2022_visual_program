@@ -29,7 +29,7 @@ void GetArmor::load_json()
 
     load_armor.parse(get_file_str(PATH_ARMOR_JSON));
     load_camera.parse(get_file_str(PATH_CAMERA_JSON));
-    
+
     if (color == false)
     {
         load_par.lowHue = load_armor["ImageProcess_red"]["hsvPara_low"][0];
@@ -98,7 +98,9 @@ void GetArmor::load_json()
 
 std::vector<int> GetArmor::process(cv::Mat &input_frame)
 {
+    
     frame = input_frame;
+    start_label = 1;
     HSV_Process();
     GetLightBar();
     CombineLightBar_ground();
@@ -108,7 +110,7 @@ std::vector<int> GetArmor::process(cv::Mat &input_frame)
 
 void GetArmor::HSV_Process()
 {
-    log_debug("调用了HSV_Process");
+    // log_debug("调用了HSV_Process");
     cv::Mat temp;
     cv::cvtColor(frame, temp, cv::COLOR_BGR2HSV);
     cv::inRange(temp, cv::Scalar(load_par.lowHue, load_par.lowSat, load_par.lowVal), cv::Scalar(load_par.highHue, load_par.highSat, load_par.highVal), mask);
@@ -116,7 +118,7 @@ void GetArmor::HSV_Process()
 
 void GetArmor::GetLightBar()
 {
-    log_debug("调用了GetLightBar");
+    // log_debug("调用了GetLightBar");
     std::vector<std::vector<cv::Point>> contours;
     std::vector<cv::Vec4i> hierarchy;
     cv::findContours(mask, contours, hierarchy, cv::RETR_EXTERNAL, cv::CHAIN_APPROX_TC89_L1);
@@ -158,7 +160,7 @@ void GetArmor::GetLightBar()
 
 void GetArmor::CombineLightBar_ground()
 {
-    log_debug("调用了CombineLightBar_ground");
+    // log_debug("调用了CombineLightBar_ground");
     auto x = -1.0;
     auto y = -1.0;
     auto z = -1.0;
@@ -263,7 +265,7 @@ void GetArmor::CombineLightBar_ground()
                 continue;
             }
             auto z = GetArmorDistance((*it_x).size.width, (*it_y).size.width);
-            std::vector<float> temp = {xCenter, yCenter, xlength, ylength, z};
+            std::vector<float> temp = {xCenter, yCenter, xlength, ylength, z, angle};
             realCenter_list->emplace_back(temp);
         }
         float temp_distence = -1;
@@ -300,13 +302,88 @@ float GetArmor::GetArmorDistance(float s0, float s1)
 #ifdef COMPILE_DEBUG
 std::list<cv::Mat> GetArmor::debug_frame()
 {
-    std::list<cv::Mat> temp = {frame, mask};
+    //深拷贝图像，保证原图不受干扰
+    std::list<cv::Mat> temp;
+    
+    auto frame_copy = frame.clone();
+    auto mask_copy = mask.clone();
+    //处理图像
+    for (auto &ch : (*lightBarList))
+    {
+        cv::ellipse(frame_copy, ch.center, ch.size, ch.angle, 0, 360, cv::Scalar(LIGHTBAR_COLOR), FRAME_THICKNESS);
+    }
+    for (auto &ch : (*realCenter_list))
+    {
+        cv::ellipse(frame_copy, cv::Point(ch[2], ch[3]), cv::Size(ch[0], ch[1]), ch[5], 0, 360, cv::Scalar(ARMOR_COLOR), FRAME_THICKNESS);
+    }
+    //在图像上写上距离
+    std::string text = "distance = ";
+    text += armor.z;
+    cv::putText(frame_copy, text, cv::Point(50, 50), cv::FONT_HERSHEY_SIMPLEX, 0.75, cv::Scalar(TEXT_COLOR), FRAME_THICKNESS);
+    temp.emplace_back(frame_copy);
+    temp.emplace_back(mask_copy);
     return temp;
 }
-void GetArmor::updata_argument()
+void GetArmor::updata_argument(const fiter_para &input)
 {
+    load_par = input;
 }
-void GetArmor::update_json()
+void GetArmor::update_json(const std::string &filename)
 {
+    json temp_load;
+    temp_load.parse(get_file_str(filename));
+
+    if (color == false)
+    {
+        temp_load["ImageProcess_red"]["hsvPara_low"][0] = load_par.lowHue;
+        temp_load["ImageProcess_red"]["hsvPara_low"][1] = load_par.lowSat;
+        temp_load["ImageProcess_red"]["hsvPara_low"][2] = load_par.lowVal;
+        temp_load["ImageProcess_red"]["hsvPara_high"][0] = load_par.highHue;
+        temp_load["ImageProcess_red"]["hsvPara_high"][1] = load_par.highSat;
+        temp_load["ImageProcess_red"]["hsvPara_high"][2] = load_par.highVal;
+    }
+    else if (color == true)
+    {
+        temp_load["ImageProcess_blue"]["hsvPara_low"][0] = load_par.lowHue;
+        temp_load["ImageProcess_blue"]["hsvPara_low"][1] = load_par.lowSat;
+        temp_load["ImageProcess_blue"]["hsvPara_low"][2] = load_par.lowVal;
+        temp_load["ImageProcess_blue"]["hsvPara_high"][0] = load_par.highHue;
+        temp_load["ImageProcess_blue"]["hsvPara_high"][1] = load_par.highSat;
+        temp_load["ImageProcess_blue"]["hsvPara_high"][2] = load_par.highVal;
+    }
+
+    temp_load["ArmorFind"]["minlighterarea"] = load_par.minlighterarea;
+    temp_load["ArmorFind"]["maxlighterarea"] = load_par.maxlighterarea;
+    temp_load["ArmorFind"]["minlighterProp"] = load_par.minlighterProp;
+    temp_load["ArmorFind"]["minAngleError"] = load_par.minAngleError;
+    temp_load["ArmorFind"]["maxAngleError"] = load_par.maxAngleError;
+
+    temp_load["ArmorFind"]["minarealongRatio"] = load_par.minarealongRatio;
+    temp_load["ArmorFind"]["maxarealongRatio"] = load_par.maxarealongRatio;
+    temp_load["ArmorFind"]["lightBarAreaDiff"] = load_par.lightBarAreaDiff;
+    temp_load["ArmorFind"]["armorAngleMin"] = load_par.armorAngleMin;
+    temp_load["ArmorFind"]["minarmorArea"] = load_par.minarmorArea;
+    temp_load["ArmorFind"]["maxarmorArea"] = load_par.maxarmorArea;
+    temp_load["ArmorFind"]["minarmorProp"] = load_par.minarmorProp;
+    temp_load["ArmorFind"]["maxarmorProp"] = load_par.maxarmorProp;
+    temp_load["ArmorFind"]["minBigarmorProp"] = load_par.minBigarmorProp;
+    temp_load["ArmorFind"]["maxBigarmorProp"] = load_par.maxBigarmorProp;
+    temp_load["ArmorFind"]["angleDiff_near"] = load_par.angleDiff_near;
+    temp_load["ArmorFind"]["angleDiff_far"] = load_par.angleDiff_far;
+    temp_load["ArmorFind"]["minareawidthRatio"] = load_par.minareawidthRatio;
+    temp_load["ArmorFind"]["maxareawidthRatio"] = load_par.maxareawidthRatio;
+    temp_load["ArmorFind"]["minareaRatio"] = load_par.minareaRatio;
+    temp_load["ArmorFind"]["maxareaRatio"] = load_par.maxareaRatio;
+    temp_load["ArmorFind"]["area_limit"] = load_par.area_limit;
+    temp_load["ArmorFind"]["xcenterdismax"] = load_par.xcenterdismax;
+    temp_load["ArmorFind"]["ylengthmin"] = load_par.ylengthmin;
+    temp_load["ArmorFind"]["ylengcenterRatio"] = load_par.ylengcenterRatio;
+    temp_load["ArmorFind"]["yixaingangleDiff_near"] = load_par.yixaingangleDiff_near;
+    temp_load["ArmorFind"]["yixaingangleDiff_far"] = load_par.yixaingangleDiff_far;
+
+    temp_load["ArmorFind"]["kh"] = load_par.kh;
+
+    save_file(filename, temp_load.str());
+    temp_load.clear();
 }
 #endif

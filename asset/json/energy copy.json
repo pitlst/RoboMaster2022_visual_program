@@ -1,0 +1,16 @@
+{
+    "EnergyFind": {
+        "MaxRsS": 0.0012877403846153846,
+        "MinRsS": 0.0007591346153846154,
+        "MaxRsRatio": 489.21599999999995,
+        "GB_size": 13,
+        "fan_armor_distence_max": 0.13,
+        "fan_armor_distence_min": 0.066,
+        "armor_R_distance_max": 0.284,
+        "armor_R_distance_min": 0.195,
+        "center_dis_x":0,
+        "center_dis_y":0,
+        "nms_distence_max":0.06,
+        "pass_number_max":35
+    }
+}
