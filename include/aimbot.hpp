@@ -76,13 +76,17 @@ namespace swq
             //测距
             json kh;
         };
-
+        
+#ifdef COMPILE_DEBUG
         // debug下用于返回图像
         std::list<cv::Mat> debug_frame();
+        // debug下用于获取参数
+        fiter_para get_argument();
         // debug下更新筛选参数
         void updata_argument(const fiter_para &input);
         // debug下json文件里的参数
         void update_json(const std::string &filename);
+#endif
 
     private:
         //将输入图像处理成hsv格式，然后通过阈值转换成二值图

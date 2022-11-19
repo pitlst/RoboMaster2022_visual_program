@@ -324,10 +324,17 @@ std::list<cv::Mat> GetArmor::debug_frame()
     temp.emplace_back(mask_copy);
     return temp;
 }
+
 void GetArmor::updata_argument(const fiter_para &input)
 {
     load_par = input;
 }
+
+GetArmor::fiter_para GetArmor::get_argument()
+{
+    return load_par;
+}
+
 void GetArmor::update_json(const std::string &filename)
 {
     json temp_load;
@@ -386,4 +393,6 @@ void GetArmor::update_json(const std::string &filename)
     save_file(filename, temp_load.str());
     temp_load.clear();
 }
+
+
 #endif

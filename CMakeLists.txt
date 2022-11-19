@@ -54,11 +54,9 @@ add_executable(${PROJECT_NAME} ${DIR_SRCS} ${M_INCLUDES} ${3rd_INCLUDE})
 # 链接动态库
 target_link_libraries(${PROJECT_NAME} PRIVATE pthread ${OpenCV_LIBS} ${3rd_LIBS} openvino::runtime)
 
-
 if("${CMAKE_BUILD_TYPE}" MATCHES "Debug")
 # >>>>>>>>测试部分:仅当在debug下启用并生成>>>>>>>>
     set(CTEST_OUTPUT_ON_FAILURE TRUE)
-    add_definitions(-D COMPILE_DEBUG)
     # 生成测试用目标可执行文件
     add_executable(test_json test/test_json.cpp src/json.cpp include/json.hpp)
     add_executable(test_xml test/test_xml.cpp src/xml.cpp include/xml.hpp)
@@ -80,7 +78,6 @@ if("${CMAKE_BUILD_TYPE}" MATCHES "Debug")
     add_test(NAME test_video COMMAND test_video)
 # <<<<<<<<测试部分结束<<<<<<<<
 elseif("${CMAKE_BUILD_TYPE}" MATCHES "Release")
-    add_definitions(-D COMPILE_RELEASE)
     # 生成相机检测文件
     add_executable(test_video test/test_video.cpp src/get_frame.cpp src/logger.cpp)
     target_link_libraries(test_video PRIVATE ${OpenCV_LIBS} ${3rd_LIBS})

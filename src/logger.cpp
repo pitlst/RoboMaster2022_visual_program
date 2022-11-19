@@ -92,6 +92,8 @@ void logger::open(const std::string &filename)
     ss << ptminfo->tm_min;
     ss << ":";
     ss << ptminfo->tm_sec;
+    ss << ":";
+    ss << label[m_level];
     std::cout << "----------" << ss.str() << "----------" << std::endl;
     //在日志中表示开始下一次写入文件
     m_file << "----------" << ss.str() << "----------" << std::endl;

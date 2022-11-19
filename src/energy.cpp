@@ -66,6 +66,7 @@ void GetEnergyMac::load_json()
 
 std::vector<int> GetEnergyMac::process(cv::Mat &input_frame, double f_time)
 {
+    log_debug("----");
     buffer_para buffer_now;
     buffer_now.f_time = f_time;
     frame = input_frame;
@@ -477,3 +478,49 @@ void GetEnergyMac::vector_protect_process()
         armor.pop_front();
     }
 }
+
+#ifdef COMPILE_DEBUG
+std::list<cv::Mat> GetEnergyMac::debug_frame()
+{
+    //深拷贝图像，保证原图不受干扰
+    std::list<cv::Mat> temp;
+    auto frame_copy = frame.clone();
+
+    return temp;
+}
+
+GetEnergyMac::energy_para GetEnergyMac::get_argument()
+{
+    return energy_par;
+}
+
+void GetEnergyMac::updata_argument(const GetEnergyMac::energy_para &input)
+{
+    energy_par = input;
+}
+
+void GetEnergyMac::update_json(const std::string &filename)
+{
+    json temp_load;
+    temp_load.parse(get_file_str(filename));
+
+    temp_load["EnergyFind"]["center_dis_y"] = energy_par.center_dis_y;
+    temp_load["EnergyFind"]["center_dis_x"] = energy_par.center_dis_x;
+    temp_load["EnergyFind"]["pass_number_max"] = energy_par.pass_number_max;
+    temp_load["EnergyFind"]["delta_angle_distance"] = energy_par.delta_angle_distance;
+    temp_load["EnergyFind"]["predict_small"] = energy_par.predict_small;
+    temp_load["EnergyFind"]["predict_big"] = energy_par.predict_big;
+    temp_load["EnergyFind"]["R_noise"] = energy_par.R_noise;
+    temp_load["EnergyFind"]["Q_noise"] = energy_par.Q_noise;
+    temp_load["EnergyFind"]["fan_armor_distence_max"] = energy_par.fan_armor_distence_max;
+    temp_load["EnergyFind"]["fan_armor_distence_min"] = energy_par.fan_armor_distence_min;
+    temp_load["EnergyFind"]["armor_R_distance_max"] = energy_par.armor_R_distance_max;
+    temp_load["EnergyFind"]["armor_R_distance_min"] = energy_par.armor_R_distance_min;
+    temp_load["EnergyFind"]["nms_distence_max"] = energy_par.nms_distence_max;
+
+    temp_load["Energy_mac"]["width"] = energy_par.frame_size;
+
+    save_file(filename, temp_load.str());
+    temp_load.clear();
+}
+#endif

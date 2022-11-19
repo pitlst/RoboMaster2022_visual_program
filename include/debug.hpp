@@ -31,7 +31,7 @@
 //默认的识别颜色
 #define DEFALUTE_COLOR 0
 //默认的击打模式
-#define DEFALUTE_MODE 0
+#define DEFALUTE_MODE 1
 //debug下灯条的默认颜色
 #define LIGHTBAR_COLOR (0,255,0)
 //debug下灯条的默认颜色
@@ -57,11 +57,9 @@
 //开启此宏定义关闭所有日志输出
 //#define NO_LOG
 
-//开启后在release模式下开始debug输出，用于测试编译器不同等级对程序的影响
-#ifdef COMPILE_RELEASE
-#undef COMPILE_RELEASE
+//此宏定义决定log等级和具体的调试,debug下会默认开启调试,正常比赛请开启release
+// #define COMPILE_RELEASE
 #define COMPILE_DEBUG
-#endif
 
 //开启此宏定义记录视频
 #define SAVE_VIDEO
@@ -77,3 +75,16 @@
 
 //开启此宏定义关闭多线程
 // #define THREADING_DEBUG
+
+//如果什么都没定义默认release
+#ifndef COMPILE_RELEASE
+#ifndef COMPILE_DEBUG
+#define COMPILE_RELEASE
+#endif
+#endif
+
+//如果定义了release就关闭debug的定义
+#ifdef COMPILE_RELEASE
+#undef COMPILE_DEBUG
+#endif
+

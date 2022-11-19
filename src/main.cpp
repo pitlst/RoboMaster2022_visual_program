@@ -43,6 +43,7 @@ TOE实验室算法组---打符/自瞄程序C++版
 //系统库
 #include <signal.h>
 
+
 //全局标志位:模式与颜色
 int mode;
 bool color;
@@ -53,6 +54,10 @@ swq::Serial serial_com;
 swq::GetFrame capture;
 swq::GetArmor aimbot;
 swq::GetEnergyMac buffer;
+//用于处理控制台回调的标志位
+volatile sig_atomic_t flag = 0;
+
+#ifndef THREADING_DEBUG
 //图像队列
 std::queue<cv::Mat> img_queue;
 //图像的时间戳队列
@@ -63,22 +68,33 @@ std::mutex img_mtx;
 std::queue<std::vector<int>> msg_queue;
 //串口队列的互斥锁
 std::mutex msg_mtx;
-//用于处理控制台回调的标志位
-volatile sig_atomic_t flag = 0;
 //用于通知线程终止的标志位
 volatile bool return_flag = false;
 
 void frame_th()
 {
+    auto mode_temp = mode;
+    auto count = 0;
     while (1)
     {
         auto frame = capture.GetOneFrame();
         auto time = std::chrono::high_resolution_clock::now() - start_t;
+        count++;
 
         img_mtx.lock();
         img_queue.push(frame);
         time_queue.push(time.count() / TIME_TRANSFORMER);
         img_mtx.unlock();
+        //每发送10次校验一下输入的模式和颜色
+        if (count > 10)
+        {
+            count = 0;
+            if (mode_temp != mode)
+            {
+                capture.restart_camera(mode);
+                mode_temp = mode;
+            }
+        }
         //线程退出
         if (return_flag)
         {
@@ -113,6 +129,7 @@ void process_th()
         }
         else if (mode == 1 || mode == 2)
         {
+            buffer.set(mode);
             msg = buffer.process(frame, time);
         }
         else
@@ -133,6 +150,7 @@ void process_th()
 void serial_th()
 {
     std::vector<int> msg = {-1, -1, -1};
+    int count = 0;
     while (1)
     {
         msg_mtx.lock();
@@ -143,6 +161,15 @@ void serial_th()
         }
         msg_mtx.unlock();
         serial_com.send_msg(msg);
+        count++;
+        //每发送10次校验一下输入的模式和颜色
+        if (count > 10)
+        {
+            count = 0;
+            auto msg_ = serial_com.get_msg();
+            color = msg_[0];
+            mode = msg_[1];
+        }
         //线程退出
         if (return_flag)
         {
@@ -151,28 +178,62 @@ void serial_th()
     }
 }
 
+
 void debug_th()
 {
-    //先等一等正常的处理线程
+//如果不是debug模式关闭debug线程
+#ifdef COMPILE_DEBUG
+    //等一等正常的处理线程
     std::this_thread::sleep_for(std::chrono::milliseconds(800));
+    //初始化需要的数据结构,并创建窗口
+    swq::tarch_bar bar;
+    //再获取相对应的数据创见滑动条
+    bar.bar_creat_aimbot(aimbot.get_argument());
+    bar.bar_creat_bufferr(buffer.get_argument());
     while (1)
     {
-        auto debug_frame = aimbot.debug_frame();
-        cv::imshow("frame_debug", debug_frame.front());
-        cv::imshow("mask_debug", debug_frame.back());
+        if (mode == 0)
+        {
+            auto debug_frame = aimbot.debug_frame();
+            aimbot.updata_argument(bar.get_bar_value_aimbot());
+            aimbot.update_json(PATH_ARMOR_JSON);
+            cv::imshow("frame_debug", debug_frame.front());
+            cv::imshow("mask_debug", debug_frame.back());
+        }
+        else
+        {
+            buffer.updata_argument(bar.get_bar_value_buffer());
+            auto debug_frame = buffer.debug_frame();
+            buffer.update_json(PATH_ENERGY_JSON);
+            cv::imshow("frame_debug", debug_frame.front());
+            // cv::imshow("mask_debug", debug_frame.back());
+        }
+
         auto k = cv::waitKey(1);
         if (k == 27)
         {
+            cv::destroyAllWindows();
             flag = 1;
             break;
         }
     }
+#endif
+#ifndef COMPILE_DEBUG
+    log_info("debug线程空置,已执行完成");
+#endif
 }
+
+#endif
 
 //重载控制台输入强制终止回调函数
 static void my_handler(int sig)
 {
     flag = 1;
+}
+
+//滑动条响应时的回调函数
+void on(int, void*){
+ 
 }
 
 int main()
@@ -194,7 +255,6 @@ int main()
     std::thread process_thread(process_th);
     std::thread serial_thread(serial_th);
     std::thread debug_thread(debug_th);
-
     while (1)
     {
         //检测到强行终止进行资源释放
@@ -206,6 +266,7 @@ int main()
             process_thread.join();
             serial_thread.join();
             debug_thread.join();
+
             log_debug("正在等待资源释放...");
             //清空各自的队列
             std::queue<cv::Mat> temp0;

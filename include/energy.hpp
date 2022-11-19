@@ -72,6 +72,17 @@ namespace swq
             std::string type_str;
         };
 
+#ifdef COMPILE_DEBUG
+        // debug下用于返回图像
+        std::list<cv::Mat> debug_frame();
+        // debug下用于获取参数
+        energy_para get_argument();
+        // debug下更新筛选参数
+        void updata_argument(const energy_para &input);
+        // debug下json文件里的参数
+        void update_json(const std::string &filename);
+#endif
+
     private:
         //读取参数
         void load_json();
