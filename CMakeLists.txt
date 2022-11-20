@@ -18,8 +18,8 @@ if(NOT DEFINED CMAKE_BUILD_TYPE)
 endif()
 # 设置默认的openvino安装路径
 if(NOT DEFINED OpenVINO_DIR)
-    #这里的路径仅针对开发者的电脑 
-    set(OpenVINO_DIR "~/openvino/runtime/cmake")
+    #这里的路径仅针对开发者的电脑,更换部署环境的时候需要更改
+    set(OpenVINO_DIR "/home/cheakf/openvino/runtime/cmake")
 endif()
 # 指定头文件在对应的文件夹中寻找
 include_directories(include)
@@ -58,33 +58,25 @@ if("${CMAKE_BUILD_TYPE}" MATCHES "Debug")
 # >>>>>>>>测试部分:仅当在debug下启用并生成>>>>>>>>
     set(CTEST_OUTPUT_ON_FAILURE TRUE)
     # 生成测试用目标可执行文件
-    add_executable(test_json test/test_json.cpp src/json.cpp include/json.hpp)
-    add_executable(test_xml test/test_xml.cpp src/xml.cpp include/xml.hpp)
-    add_executable(test_hint test/test_hint.cpp src/hint.cpp include/hint.hpp)
-    add_executable(test_utils test/test_utils.cpp src/utils.cpp include/utils.hpp)
-    add_executable(test_video test/test_video.cpp src/utils.cpp src/get_frame.cpp src/json.cpp src/logger.cpp include/utils.hpp include/get_frame.hpp include/json.hpp include/logger.hpp)
-    target_link_libraries(test_video PRIVATE ${OpenCV_LIBS} ${3rd_LIBS})
+    add_executable(test_json ${PROJECT_SOURCE_DIR}/test/test_json.cpp ${PROJECT_SOURCE_DIR}/src/json.cpp ${PROJECT_SOURCE_DIR}/include/json.hpp)
+    add_executable(test_hint ${PROJECT_SOURCE_DIR}/test/test_hint.cpp ${PROJECT_SOURCE_DIR}/src/hint.cpp ${PROJECT_SOURCE_DIR}/include/hint.hpp ${PROJECT_SOURCE_DIR}/include/debug.hpp)
+    add_executable(restart_video ${PROJECT_SOURCE_DIR}/test/restart_video.cpp)
+    target_link_libraries(restart_video PRIVATE ${3rd_LIBS})
     # 启用ctest测试
     enable_testing()
     # 运行测试json生成文件
     add_test(NAME json-run COMMAND test_json)
-    # 运行测试xml生成文件
-    add_test(NAME xml-run COMMAND test_xml)
     # 运行测试大数运算文件
     add_test(NAME hint-run COMMAND test_hint)
-    # 运行测试文件读取
-    add_test(NAME utils-run COMMAND test_utils)
     # 运行相机测试
-    add_test(NAME test_video COMMAND test_video)
+    add_test(NAME restart_video COMMAND restart_video)
 # <<<<<<<<测试部分结束<<<<<<<<
 elseif("${CMAKE_BUILD_TYPE}" MATCHES "Release")
     # 生成相机检测文件
-    add_executable(test_video test/test_video.cpp src/get_frame.cpp src/logger.cpp)
-    target_link_libraries(test_video PRIVATE ${OpenCV_LIBS} ${3rd_LIBS})
+    add_executable(restart_video ${PROJECT_SOURCE_DIR}/test/restart_video.cpp)
+    target_link_libraries(restart_video PRIVATE ${3rd_LIBS})
     # 启用ctest测试
     enable_testing()
     # 运行相机测试
-    add_test(NAME test_video COMMAND test_video)
-else()
-    add_definitions(-D COMPILE_MINSIZEREL)
+    add_test(NAME restart_video COMMAND restart_video)
 endif()

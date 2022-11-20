@@ -66,7 +66,6 @@ void GetEnergyMac::load_json()
 
 std::vector<int> GetEnergyMac::process(cv::Mat &input_frame, double f_time)
 {
-    log_debug("----");
     buffer_para buffer_now;
     buffer_now.f_time = f_time;
     frame = input_frame;
@@ -81,7 +80,6 @@ std::vector<int> GetEnergyMac::process(cv::Mat &input_frame, double f_time)
     auto output_tensor_1 = infer_request.get_tensor(output_port_stride16);
     auto output_tensor_2 = infer_request.get_tensor(output_port_stride32);
     //由于模型的结构是16,32,8,所以这里把最后一个移到前面来,同时组织成容器，方便循环时调用
-
     std::vector<ov::Tensor> output_tensor;
     output_tensor.emplace_back(output_tensor_2);
     output_tensor.emplace_back(output_tensor_0);
@@ -95,9 +93,7 @@ std::vector<int> GetEnergyMac::process(cv::Mat &input_frame, double f_time)
     //保存该结果
     armor.emplace_back(buffer_now);
     //预测装甲板的位置
-    // auto hit_pos = angle_predicted();
-    angle_predicted();
-    std::vector<int> hit_pos = {-1, -1, -1};
+    auto hit_pos = angle_predicted();
     return hit_pos;
 }
 
@@ -480,21 +476,20 @@ void GetEnergyMac::vector_protect_process()
 }
 
 #ifdef COMPILE_DEBUG
-std::list<cv::Mat> GetEnergyMac::debug_frame()
+std::list<cv::Mat> GetEnergyMac::debug_frame(cv::Mat &input_frame)
 {
-    //深拷贝图像，保证原图不受干扰
     std::list<cv::Mat> temp;
-    auto frame_copy = frame.clone();
 
+    temp.emplace_back(input_frame);
     return temp;
 }
 
-GetEnergyMac::energy_para GetEnergyMac::get_argument()
+swq::energy_para GetEnergyMac::get_argument()
 {
     return energy_par;
 }
 
-void GetEnergyMac::updata_argument(const GetEnergyMac::energy_para &input)
+void GetEnergyMac::updata_argument(const swq::energy_para &input)
 {
     energy_par = input;
 }

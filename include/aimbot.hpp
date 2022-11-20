@@ -16,6 +16,58 @@
 
 namespace swq
 {
+    //存储最后的空间坐标
+    struct armor_final
+    {
+        int x;
+        int y;
+        int z;
+    };
+    //筛选需要的参数
+    struct fiter_para
+    {
+        // hsv阈值
+        int lowHue;
+        int lowSat;
+        int lowVal;
+        int highHue;
+        int highSat;
+        int highVal;
+        //测距
+        int kh;
+        //灯条筛选
+        double minlighterarea;
+        double maxlighterarea;
+        double minlighterProp;
+        double maxlighterProp;
+        double minAngleError;
+        double maxAngleError;
+        //装甲板筛选
+        double minarealongRatio;
+        double maxarealongRatio;
+        double lightBarAreaDiff;
+        double armorAngleMin;
+        double minarmorArea;
+        double maxarmorArea;
+        double minarmorProp;
+        double maxarmorProp;
+        double minBigarmorProp;
+        double maxBigarmorProp;
+        double angleDiff_near;
+        double angleDiff_far;
+        double minareawidthRatio;
+        double maxareawidthRatio;
+        double minareaRatio;
+        double maxareaRatio;
+        double area_limit;
+        double xcenterdismax;
+        double ylengthmin;
+        double ylengcenterRatio;
+        double yixaingangleDiff_near;
+        double yixaingangleDiff_far;
+
+    };
+
     class GetArmor
     {
     public:
@@ -26,60 +78,9 @@ namespace swq
         void load_json();
         std::vector<int> process(cv::Mat &input_frame);
 
-        //存储最后的空间坐标
-        struct armor_final
-        {
-            int x;
-            int y;
-            int z;
-        };
-        //筛选需要的参数
-        struct fiter_para
-        {
-            // hsv阈值
-            int lowHue;
-            int lowSat;
-            int lowVal;
-            int highHue;
-            int highSat;
-            int highVal;
-            //灯条筛选
-            double minlighterarea;
-            double maxlighterarea;
-            double minlighterProp;
-            double maxlighterProp;
-            double minAngleError;
-            double maxAngleError;
-            //装甲板筛选
-            double minarealongRatio;
-            double maxarealongRatio;
-            double lightBarAreaDiff;
-            double armorAngleMin;
-            double minarmorArea;
-            double maxarmorArea;
-            double minarmorProp;
-            double maxarmorProp;
-            double minBigarmorProp;
-            double maxBigarmorProp;
-            double angleDiff_near;
-            double angleDiff_far;
-            double minareawidthRatio;
-            double maxareawidthRatio;
-            double minareaRatio;
-            double maxareaRatio;
-            double area_limit;
-            double xcenterdismax;
-            double ylengthmin;
-            double ylengcenterRatio;
-            double yixaingangleDiff_near;
-            double yixaingangleDiff_far;
-            //测距
-            json kh;
-        };
-        
 #ifdef COMPILE_DEBUG
         // debug下用于返回图像
-        std::list<cv::Mat> debug_frame();
+        std::list<cv::Mat> debug_frame(cv::Mat &input_frame);
         // debug下用于获取参数
         fiter_para get_argument();
         // debug下更新筛选参数

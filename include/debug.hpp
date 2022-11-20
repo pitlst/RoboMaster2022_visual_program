@@ -25,13 +25,13 @@
 //能量机关模式参数-大符
 #define BIG_ENERGY_BUFFER 2
 //chono系统时钟调用单位转换常数
-#define TIME_TRANSFORMER 1000000000
+#define TIME_TRANSFORMER 1000000000.0
 //圆周率常数
 #define PI M_PI
 //默认的识别颜色
 #define DEFALUTE_COLOR 0
 //默认的击打模式
-#define DEFALUTE_MODE 1
+#define DEFALUTE_MODE 0
 //debug下灯条的默认颜色
 #define LIGHTBAR_COLOR (0,255,0)
 //debug下灯条的默认颜色
@@ -40,6 +40,8 @@
 #define TEXT_COLOR (255,255,255)
 //debug下图像的默认线宽
 #define FRAME_THICKNESS 2
+//图像队列的最大大小
+#define FRAME_QUEUE_SIZE_MAX 3
 
 
 
@@ -59,13 +61,13 @@
 
 //此宏定义决定log等级和具体的调试,debug下会默认开启调试,正常比赛请开启release
 // #define COMPILE_RELEASE
-#define COMPILE_DEBUG
+// #define COMPILE_DEBUG
 
 //开启此宏定义记录视频
 #define SAVE_VIDEO
 
 //开启此宏定义保存串口接收数据
-#define SAVE_SERIAL_INPUT
+// #define SAVE_SERIAL_INPUT
 
 //开启此宏定义启用GPU推理,不启用默认使用CPU
 #define GPU_INFER

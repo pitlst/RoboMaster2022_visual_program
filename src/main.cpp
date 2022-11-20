@@ -43,7 +43,6 @@ TOE实验室算法组---打符/自瞄程序C++版
 //系统库
 #include <signal.h>
 
-
 //全局标志位:模式与颜色
 int mode;
 bool color;
@@ -56,6 +55,9 @@ swq::GetArmor aimbot;
 swq::GetEnergyMac buffer;
 //用于处理控制台回调的标志位
 volatile sig_atomic_t flag = 0;
+//滑动条用的全局回调数据
+swq::m_fiter_para bar_aimbot_global;
+swq::m_energy_para bar_buffer_global;
 
 #ifndef THREADING_DEBUG
 //图像队列
@@ -75,16 +77,30 @@ void frame_th()
 {
     auto mode_temp = mode;
     auto count = 0;
+    int fps = 0;
     while (1)
     {
-        auto frame = capture.GetOneFrame();
+        //线程退出
+        if (return_flag)
+        {
+            return;
+        }
+        
         auto time = std::chrono::high_resolution_clock::now() - start_t;
-        count++;
 
         img_mtx.lock();
+        //限制队列最大大小，防止消费者抢不到锁
+        if (img_queue.size() > FRAME_QUEUE_SIZE_MAX)
+        {
+            img_mtx.unlock();
+            continue;
+        }
+        auto frame = capture.GetOneFrame();
         img_queue.push(frame);
         time_queue.push(time.count() / TIME_TRANSFORMER);
         img_mtx.unlock();
+
+        count++;
         //每发送10次校验一下输入的模式和颜色
         if (count > 10)
         {
@@ -95,14 +111,85 @@ void frame_th()
                 mode_temp = mode;
             }
         }
-        //线程退出
-        if (return_flag)
-        {
-            return;
-        }
     }
 }
 
+#ifdef COMPILE_DEBUG
+void process_th()
+{
+    cv::Mat frame;
+    double time;
+    int k;
+    std::vector<int> msg = {-1, -1, -1};
+    cv::namedWindow("调参窗口aimbot_1");
+    cv::namedWindow("调参窗口aimbot_2");
+    cv::namedWindow("调参窗口aimbot_3");
+    cv::namedWindow("调参窗口buffer");
+    cv::namedWindow("frame_debug");
+    cv::namedWindow("mask_debug");
+    //获取相对应的数据
+    ::bar_aimbot_global = swq::trans_para_to_bar(aimbot.get_argument());
+    ::bar_buffer_global = swq::trans_para_to_bar(buffer.get_argument());
+    //创建滑动条
+    swq::bar_creat_aimbot(bar_aimbot_global);
+    swq::bar_creat_bufferr(bar_buffer_global);
+    while (1)
+    {
+        //线程退出
+        if (k == 27 || flag == 1)
+        {
+            cv::destroyAllWindows();
+            flag = 1;
+            break;
+        }
+
+        img_mtx.lock();
+        //队列为空时等待生产者
+        if (img_queue.empty())
+        {
+            img_mtx.unlock();
+            continue;
+        }
+        frame = img_queue.front();
+        time = time_queue.front();
+        img_queue.pop();
+        time_queue.pop();
+        
+        if (mode == 0)
+        {
+            msg = aimbot.process(frame);
+            auto debug_frame = aimbot.debug_frame(frame);
+            aimbot.updata_argument(trans_bar_to_para(bar_aimbot_global));
+            aimbot.update_json(PATH_ARMOR_JSON);
+            cv::imshow("frame_debug", debug_frame.front());
+            cv::imshow("mask_debug", debug_frame.back());
+        }
+        else if (mode == 1 || mode == 2)
+        {
+            buffer.set(mode);
+            msg = buffer.process(frame, time);
+            buffer.updata_argument(trans_bar_to_para(bar_buffer_global));
+            auto debug_frame = buffer.debug_frame(frame);
+            // buffer.update_json(PATH_ENERGY_JSON);
+            cv::imshow("frame_debug", debug_frame.front());
+            // cv::imshow("mask_debug", debug_frame.back());
+        }
+        else
+        {
+            msg = std::vector<int>{-1, -1, -1};
+        }
+        img_mtx.unlock();
+
+        msg_mtx.lock();
+        msg_queue.push(msg);
+        msg_mtx.unlock();
+        
+        //获取按键
+        k = cv::waitKey(1);
+    }
+}
+#endif
+#ifndef COMPILE_DEBUG
 void process_th()
 {
     cv::Mat frame;
@@ -110,19 +197,24 @@ void process_th()
     std::vector<int> msg = {-1, -1, -1};
     while (1)
     {
-        img_mtx.lock();
-        while (img_queue.empty() || time_queue.empty())
+        //线程退出
+        if (return_flag)
         {
-            //等待20毫秒再去获取图像
+            return;
+        }
+
+        img_mtx.lock();
+        //队列为空时等待生产者
+        if (img_queue.empty())
+        {
             img_mtx.unlock();
-            std::this_thread::sleep_for(std::chrono::milliseconds(20));
-            img_mtx.lock();
+            continue;
         }
         frame = img_queue.front();
         time = time_queue.front();
         img_queue.pop();
         time_queue.pop();
-        img_mtx.unlock();
+
         if (mode == 0)
         {
             msg = aimbot.process(frame);
@@ -136,16 +228,14 @@ void process_th()
         {
             msg = std::vector<int>{-1, -1, -1};
         }
+        img_mtx.unlock();
+
         msg_mtx.lock();
         msg_queue.push(msg);
         msg_mtx.unlock();
-        //线程退出
-        if (return_flag)
-        {
-            return;
-        }
     }
 }
+#endif
 
 void serial_th()
 {
@@ -153,6 +243,12 @@ void serial_th()
     int count = 0;
     while (1)
     {
+        //线程退出
+        if (return_flag)
+        {
+            return;
+        }
+
         msg_mtx.lock();
         if (!msg_queue.empty())
         {
@@ -170,59 +266,8 @@ void serial_th()
             color = msg_[0];
             mode = msg_[1];
         }
-        //线程退出
-        if (return_flag)
-        {
-            return;
-        }
     }
 }
-
-
-void debug_th()
-{
-//如果不是debug模式关闭debug线程
-#ifdef COMPILE_DEBUG
-    //等一等正常的处理线程
-    std::this_thread::sleep_for(std::chrono::milliseconds(800));
-    //初始化需要的数据结构,并创建窗口
-    swq::tarch_bar bar;
-    //再获取相对应的数据创见滑动条
-    bar.bar_creat_aimbot(aimbot.get_argument());
-    bar.bar_creat_bufferr(buffer.get_argument());
-    while (1)
-    {
-        if (mode == 0)
-        {
-            auto debug_frame = aimbot.debug_frame();
-            aimbot.updata_argument(bar.get_bar_value_aimbot());
-            aimbot.update_json(PATH_ARMOR_JSON);
-            cv::imshow("frame_debug", debug_frame.front());
-            cv::imshow("mask_debug", debug_frame.back());
-        }
-        else
-        {
-            buffer.updata_argument(bar.get_bar_value_buffer());
-            auto debug_frame = buffer.debug_frame();
-            buffer.update_json(PATH_ENERGY_JSON);
-            cv::imshow("frame_debug", debug_frame.front());
-            // cv::imshow("mask_debug", debug_frame.back());
-        }
-
-        auto k = cv::waitKey(1);
-        if (k == 27)
-        {
-            cv::destroyAllWindows();
-            flag = 1;
-            break;
-        }
-    }
-#endif
-#ifndef COMPILE_DEBUG
-    log_info("debug线程空置,已执行完成");
-#endif
-}
-
 #endif
 
 //重载控制台输入强制终止回调函数
@@ -231,14 +276,9 @@ static void my_handler(int sig)
     flag = 1;
 }
 
-//滑动条响应时的回调函数
-void on(int, void*){
- 
-}
-
 int main()
 {
-    log_debug("程序开始");
+    log_debug("主线程开始");
     //接收并处理控制台输入
     signal(SIGINT, my_handler);
 
@@ -254,20 +294,18 @@ int main()
     std::thread frame_thread(frame_th);
     std::thread process_thread(process_th);
     std::thread serial_thread(serial_th);
-    std::thread debug_thread(debug_th);
     while (1)
     {
+        std::this_thread::sleep_for(std::chrono::milliseconds(50));
         //检测到强行终止进行资源释放
         if (flag)
         {
             return_flag = true;
-            log_debug("正在等待线程停止...");
+            log_info("正在等待线程停止...");
             frame_thread.join();
             process_thread.join();
             serial_thread.join();
-            debug_thread.join();
-
-            log_debug("正在等待资源释放...");
+            log_info("正在等待资源释放...");
             //清空各自的队列
             std::queue<cv::Mat> temp0;
             std::queue<double> temp1;
@@ -300,6 +338,6 @@ int main()
         serial_com.send_msg(msg);
     }
 #endif
-    log_debug("程序结束");
+    log_debug("主线程结束");
     return 0;
 }

@@ -20,6 +20,7 @@ GetArmor::~GetArmor()
 void GetArmor::set(bool input_color)
 {
     color = input_color;
+    load_json();
 }
 
 void GetArmor::load_json()
@@ -29,7 +30,7 @@ void GetArmor::load_json()
 
     load_armor.parse(get_file_str(PATH_ARMOR_JSON));
     load_camera.parse(get_file_str(PATH_CAMERA_JSON));
-
+    log_debug("color is :", color);
     if (color == false)
     {
         load_par.lowHue = load_armor["ImageProcess_red"]["hsvPara_low"][0];
@@ -98,7 +99,6 @@ void GetArmor::load_json()
 
 std::vector<int> GetArmor::process(cv::Mat &input_frame)
 {
-    
     frame = input_frame;
     start_label = 1;
     HSV_Process();
@@ -166,7 +166,8 @@ void GetArmor::CombineLightBar_ground()
     auto z = -1.0;
     if (lightBarList->size() < 2)
     {
-        log_debug("NO Armor");
+        //log_debug("NO Armor");
+        return;
     }
     for (auto it_x = lightBarList->begin(); it_x != lightBarList->end(); it_x++)
     {
@@ -296,32 +297,33 @@ void GetArmor::CombineLightBar_ground()
 
 float GetArmor::GetArmorDistance(float s0, float s1)
 {
-    return load_par.kh.ULLInt() / (s0 + s1);
+    return load_par.kh / (s0 + s1);
 }
 
 #ifdef COMPILE_DEBUG
-std::list<cv::Mat> GetArmor::debug_frame()
+std::list<cv::Mat> GetArmor::debug_frame(cv::Mat &input_frame)
 {
-    //深拷贝图像，保证原图不受干扰
     std::list<cv::Mat> temp;
-    
-    auto frame_copy = frame.clone();
-    auto mask_copy = mask.clone();
+    cv::Mat mask;
+    //深拷贝图像，保证原图不受干扰
+    cv::Mat frame_temp = input_frame.clone();
+    cv::cvtColor(frame_temp, frame_temp, cv::COLOR_BGR2HSV);
+    cv::inRange(frame_temp, cv::Scalar(load_par.lowHue, load_par.lowSat, load_par.lowVal), cv::Scalar(load_par.highHue, load_par.highSat, load_par.highVal), mask);
     //处理图像
     for (auto &ch : (*lightBarList))
     {
-        cv::ellipse(frame_copy, ch.center, ch.size, ch.angle, 0, 360, cv::Scalar(LIGHTBAR_COLOR), FRAME_THICKNESS);
+        cv::ellipse(input_frame, ch.center, ch.size, ch.angle, 0, 360, cv::Scalar(LIGHTBAR_COLOR), FRAME_THICKNESS);
     }
     for (auto &ch : (*realCenter_list))
     {
-        cv::ellipse(frame_copy, cv::Point(ch[2], ch[3]), cv::Size(ch[0], ch[1]), ch[5], 0, 360, cv::Scalar(ARMOR_COLOR), FRAME_THICKNESS);
+        cv::ellipse(input_frame, cv::Point(ch[2], ch[3]), cv::Size(ch[0], ch[1]), ch[5], 0, 360, cv::Scalar(ARMOR_COLOR), FRAME_THICKNESS);
     }
     //在图像上写上距离
     std::string text = "distance = ";
     text += armor.z;
-    cv::putText(frame_copy, text, cv::Point(50, 50), cv::FONT_HERSHEY_SIMPLEX, 0.75, cv::Scalar(TEXT_COLOR), FRAME_THICKNESS);
-    temp.emplace_back(frame_copy);
-    temp.emplace_back(mask_copy);
+    cv::putText(input_frame, text, cv::Point(50, 50), cv::FONT_HERSHEY_SIMPLEX, 0.75, cv::Scalar(TEXT_COLOR), FRAME_THICKNESS);
+    temp.emplace_back(input_frame);
+    //temp.emplace_back(mask);
     return temp;
 }
 
@@ -330,7 +332,7 @@ void GetArmor::updata_argument(const fiter_para &input)
     load_par = input;
 }
 
-GetArmor::fiter_para GetArmor::get_argument()
+fiter_para GetArmor::get_argument()
 {
     return load_par;
 }

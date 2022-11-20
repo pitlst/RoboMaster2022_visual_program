@@ -141,11 +141,6 @@ json::operator double()
     return 0.0;
 }
 
-json::operator unsigned long long int()
-{
-    return ULLInt();
-}
-
 json::operator std::string()
 {
     if (m_type != json_string)

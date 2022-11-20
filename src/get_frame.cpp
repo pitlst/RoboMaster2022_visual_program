@@ -463,7 +463,7 @@ bool GetFrame::PrintDeviceInfo(MV_CC_DEVICE_INFO *pstMVDevInfo)
 {
     if (nullptr == pstMVDevInfo)
     {
-        log_info("The Pointer of pstMVDevInfo is NULL! \n pstMVDevInfo指针没有指向任何位置");
+        log_info("pstMVDevInfo指针没有指向任何位置");
         return false;
     }
     if (pstMVDevInfo->nTLayerType == MV_GIGE_DEVICE)
@@ -484,7 +484,7 @@ bool GetFrame::PrintDeviceInfo(MV_CC_DEVICE_INFO *pstMVDevInfo)
     }
     else
     {
-        log_info("不支持.\n");
+        log_info("不支持的设备.\n");
     }
     return true;
 }

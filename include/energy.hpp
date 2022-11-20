@@ -15,6 +15,53 @@
 
 namespace swq
 {
+    //存储目标的相关参数
+    struct buffer_para
+    {
+        double delta_angle;
+        double f_time;
+        //这里的待击打点是一个三个点的空间坐标
+        std::vector<float> armor_point;
+        //这里的center是一个网络输出的完整列向量
+        std::vector<float> center;
+    };
+    //能量机关需要的筛选参数
+    struct energy_para
+    {
+        int center_dis_x;
+        int center_dis_y;
+        int pass_number_max;
+        int delta_angle_distance;
+        int frame_size;
+        double predict_small;
+        double predict_big;
+        double R_noise;
+        double Q_noise;
+        double fan_armor_distence_max;
+        double fan_armor_distence_min;
+        double armor_R_distance_max;
+        double armor_R_distance_min;
+        double nms_distence_max;
+        std::string model_path;
+    };
+    //向量的形状
+    struct model_shape
+    {
+        int n;
+        int c;
+        int w;
+        int h;
+    };
+    //模型相关的参数
+    struct model_para
+    {
+        model_shape input;
+        model_shape stride8;
+        model_shape stride16;
+        model_shape stride32;
+        std::string type_str;
+    };
+
     class GetEnergyMac
     {
     public:
@@ -23,58 +70,11 @@ namespace swq
         ~GetEnergyMac();
 
         void set(int input_mode);
-        std::vector<int> process(cv::Mat & input_frame, double f_time);
-
-        //存储目标的相关参数
-        struct buffer_para
-        {
-            double delta_angle;
-            double f_time;
-            //这里的待击打点是一个三个点的空间坐标
-            std::vector<float> armor_point;
-            //这里的center是一个网络输出的完整列向量
-            std::vector<float> center;
-        };
-        //能量机关需要的筛选参数
-        struct energy_para
-        {
-            int center_dis_x;
-            int center_dis_y;
-            int pass_number_max;
-            int delta_angle_distance;
-            int frame_size;
-            double predict_small;
-            double predict_big;
-            double R_noise;
-            double Q_noise;
-            double fan_armor_distence_max;
-            double fan_armor_distence_min;
-            double armor_R_distance_max;
-            double armor_R_distance_min;
-            double nms_distence_max;
-            std::string model_path;
-        };
-        //向量的形状
-        struct model_shape
-        {
-            int n;
-            int c;
-            int w;
-            int h;
-        };
-        //模型相关的参数
-        struct model_para
-        {
-            model_shape input;
-            model_shape stride8;
-            model_shape stride16;
-            model_shape stride32;
-            std::string type_str;
-        };
+        std::vector<int> process(cv::Mat &input_frame, double f_time);
 
 #ifdef COMPILE_DEBUG
         // debug下用于返回图像
-        std::list<cv::Mat> debug_frame();
+        std::list<cv::Mat> debug_frame(cv::Mat &input_frame);
         // debug下用于获取参数
         energy_para get_argument();
         // debug下更新筛选参数
@@ -94,25 +94,24 @@ namespace swq
         void trans_mat_to_tensor();
         //将模型输出的tensor转换为Matrix,并按照对应形状组织起来,仅支持FP32精度
         void trans_tansor_to_matrix(std::vector<ov::Tensor> out_tenosr);
-        //sigmoid函数
+        // sigmoid函数
         float sigmoid(float input_num);
         //筛选中心
-        void center_filter(buffer_para & buffer);
+        void center_filter(buffer_para &buffer);
         //筛选被击打的装甲板
-        void energy_filter(buffer_para & buffer);
+        void energy_filter(buffer_para &buffer);
         //预测装甲板位置
         std::vector<int> angle_predicted();
         //判断符的旋转方向
         int judge_rotate_direct();
         //笛卡尔坐标与极坐标转换
-        double cartesian_to_polar(buffer_para & buffer);
+        double cartesian_to_polar(buffer_para &buffer);
         //小符预测
         double energymac_forecast_small(double angle);
         //大符预测
         double energymac_forecast_big(double angle);
         //检查维护目标历史记录
         void vector_protect_process();
-
 
         //检测的开始时间
         double begin_time = 0;
@@ -145,14 +144,13 @@ namespace swq
         std::deque<buffer_para> armor;
         energy_para energy_par;
         model_para model_par;
-        
+
         //模型的anchor直接写死在这里了,如果需要更改训练程序中的anchor，请配合更改这里
-        const float anchors[3][6] = {{4,5,  8,10,  13,16},{23,29,  43,55,  73,105},{146,217,  231,300,  335,433}};
+        const float anchors[3][6] = {{4, 5, 8, 10, 13, 16}, {23, 29, 43, 55, 73, 105}, {146, 217, 231, 300, 335, 433}};
         //特征图尺寸
         const float stride[3] = {8.0, 16.0, 32.0};
         //模型类别
         const int classes = 3;
     };
-
 
 }

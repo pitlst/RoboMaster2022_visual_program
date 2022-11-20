@@ -38,7 +38,6 @@ namespace swq
         operator bool();
         operator int();
         operator double();
-        operator unsigned long long int();
         operator std::string();
 
         //运算符重载
