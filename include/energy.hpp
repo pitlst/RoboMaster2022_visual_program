@@ -86,10 +86,12 @@ namespace swq
     private:
         //读取参数
         void load_json();
-        // openvino的初始化
+        //openvino的初始化
         void openvino_init();
         //获取模型参数
         void model_para_init();
+        //卡尔曼滤波器初始化
+        void kalmanfilter_init();
         //将cv::Mat转换为ov::Tensor,包括图像相关的前处理,仅支持FP32精度
         void trans_mat_to_tensor();
         //将模型输出的tensor转换为Matrix,并按照对应形状组织起来,仅支持FP32精度
@@ -142,14 +144,19 @@ namespace swq
         std::vector<std::vector<float>> output_res;
         //历史目标记录,使用队列存储
         std::deque<buffer_para> armor;
+        //存储的筛选参数
         energy_para energy_par;
         model_para model_par;
+        //opencv卡尔曼滤波器
+        cv::KalmanFilter KF;
+        //初始测量值x'(0)
+        cv::Mat measurement;
 
         //模型的anchor直接写死在这里了,如果需要更改训练程序中的anchor，请配合更改这里
         const float anchors[3][6] = {{4, 5, 8, 10, 13, 16}, {23, 29, 43, 55, 73, 105}, {146, 217, 231, 300, 335, 433}};
-        //特征图尺寸
+        //特征图尺寸,顺序是根据模型来的，更改这里需要配合更改训练程序
         const float stride[3] = {8.0, 16.0, 32.0};
-        //模型类别
+        //模型类别,同样需要同步更改训练程序
         const int classes = 3;
     };
 

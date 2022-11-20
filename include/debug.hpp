@@ -31,19 +31,21 @@
 //默认的识别颜色
 #define DEFALUTE_COLOR 0
 //默认的击打模式
-#define DEFALUTE_MODE 0
+#define DEFALUTE_MODE 2
 //debug下灯条的默认颜色
 #define LIGHTBAR_COLOR (0,255,0)
-//debug下灯条的默认颜色
+//debug下装甲板的默认颜色
 #define ARMOR_COLOR (0,255,255)
-//debug下灯条的默认颜色
+//debug下文字的默认颜色
 #define TEXT_COLOR (255,255,255)
+//debug下能量机关装甲筛选的默认颜色
+#define BUFFER_ARMOR_COLOR (255, 0, 255)
+//debug下能量机关中心筛选的默认颜色
+#define BUFFER_CENTER_COLOR (255,255,255)
 //debug下图像的默认线宽
 #define FRAME_THICKNESS 2
 //图像队列的最大大小
 #define FRAME_QUEUE_SIZE_MAX 3
-
-
 
 // nms参数
 //这是模型的目标置信度阈值
@@ -61,7 +63,7 @@
 
 //此宏定义决定log等级和具体的调试,debug下会默认开启调试,正常比赛请开启release
 // #define COMPILE_RELEASE
-// #define COMPILE_DEBUG
+#define COMPILE_DEBUG
 
 //开启此宏定义记录视频
 #define SAVE_VIDEO

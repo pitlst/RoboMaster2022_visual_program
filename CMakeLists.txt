@@ -60,6 +60,8 @@ if("${CMAKE_BUILD_TYPE}" MATCHES "Debug")
     # 生成测试用目标可执行文件
     add_executable(test_json ${PROJECT_SOURCE_DIR}/test/test_json.cpp ${PROJECT_SOURCE_DIR}/src/json.cpp ${PROJECT_SOURCE_DIR}/include/json.hpp)
     add_executable(test_hint ${PROJECT_SOURCE_DIR}/test/test_hint.cpp ${PROJECT_SOURCE_DIR}/src/hint.cpp ${PROJECT_SOURCE_DIR}/include/hint.hpp ${PROJECT_SOURCE_DIR}/include/debug.hpp)
+    add_executable(test_kalman ${PROJECT_SOURCE_DIR}/test/test.cpp)
+    target_link_libraries(test_kalman PRIVATE ${OpenCV_LIBS})
     add_executable(restart_video ${PROJECT_SOURCE_DIR}/test/restart_video.cpp)
     target_link_libraries(restart_video PRIVATE ${3rd_LIBS})
     # 启用ctest测试
@@ -70,6 +72,8 @@ if("${CMAKE_BUILD_TYPE}" MATCHES "Debug")
     add_test(NAME hint-run COMMAND test_hint)
     # 运行相机测试
     add_test(NAME restart_video COMMAND restart_video)
+
+    add_test(NAME test-run COMMAND test)
 # <<<<<<<<测试部分结束<<<<<<<<
 elseif("${CMAKE_BUILD_TYPE}" MATCHES "Release")
     # 生成相机检测文件

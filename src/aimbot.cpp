@@ -323,7 +323,7 @@ std::list<cv::Mat> GetArmor::debug_frame(cv::Mat &input_frame)
     text += armor.z;
     cv::putText(input_frame, text, cv::Point(50, 50), cv::FONT_HERSHEY_SIMPLEX, 0.75, cv::Scalar(TEXT_COLOR), FRAME_THICKNESS);
     temp.emplace_back(input_frame);
-    //temp.emplace_back(mask);
+    temp.emplace_back(mask);
     return temp;
 }
 

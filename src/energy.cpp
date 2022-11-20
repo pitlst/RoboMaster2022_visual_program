@@ -11,6 +11,7 @@ GetEnergyMac::GetEnergyMac()
 {
     load_json();
     openvino_init();
+    kalmanfilter_init();
 }
 
 GetEnergyMac::GetEnergyMac(int input_mode)
@@ -18,6 +19,7 @@ GetEnergyMac::GetEnergyMac(int input_mode)
     set(input_mode);
     load_json();
     openvino_init();
+    kalmanfilter_init();
 }
 
 GetEnergyMac::~GetEnergyMac()
@@ -154,6 +156,19 @@ void GetEnergyMac::model_para_init()
     {
         ch.resize(7);
     }
+}
+
+void GetEnergyMac::kalmanfilter_init()
+{
+    cv::RNG rng;
+    KF.init(4, 2, 0);
+    KF.transitionMatrix = (cv::Mat_<float>(4, 4) << 1, 0, 1, 0, 0, 1, 0, 1, 0, 0, 1, 0, 0, 0, 0, 1); //转移矩阵A
+    setIdentity(KF.measurementMatrix);                                                               //测量矩阵H
+    setIdentity(KF.processNoiseCov, cv::Scalar::all(energy_par.Q_noise));                            //系统噪声方差矩阵Q
+    setIdentity(KF.measurementNoiseCov, cv::Scalar::all(energy_par.R_noise));                        //测量噪声方差矩阵R
+    setIdentity(KF.errorCovPost, cv::Scalar::all(1));                                                //后验错误估计协方差矩阵P
+    rng.fill(KF.statePost, cv::RNG::UNIFORM, 0, 0);                                                  //初始状态值x(0)
+    measurement = cv::Mat::zeros(2, 1, CV_32F);                                                      //初始测量值x'(0)
 }
 
 void GetEnergyMac::center_filter(buffer_para &buffer)
@@ -343,8 +358,19 @@ double GetEnergyMac::energymac_forecast_small(double angle)
 
 double GetEnergyMac::energymac_forecast_big(double angle)
 {
-    //这里可以采取两种预测方式：
-    //一种是一维卡尔曼滤波,另一种是分段映射,手动绘制函数
+    auto angle_1 = atan2(armor[-1].armor_point[0], armor[-1].armor_point[1]);
+    auto angle_2 = atan2(armor[-2].armor_point[0], armor[-2].armor_point[1]);
+    auto delta_angle = abs((angle_1 - angle_2) * 180.0f / PI);
+    auto delta_time = armor[-1].f_time - armor[-2].f_time;
+    auto temp_angel_speed = delta_angle / delta_time;
+    auto f_time = armor[-1].f_time;
+
+    measurement.at<double>(0) = temp_angel_speed;
+    measurement.at<double>(0) = f_time;
+    KF.correct(measurement);
+
+    cv::Mat prediction = KF.predict();
+    angle = angle + prediction.at<double>(0) * prediction.at<double>(1);
     return angle;
 }
 
@@ -479,7 +505,18 @@ void GetEnergyMac::vector_protect_process()
 std::list<cv::Mat> GetEnergyMac::debug_frame(cv::Mat &input_frame)
 {
     std::list<cv::Mat> temp;
-
+    auto temp_armor = armor.back();
+    if (!temp_armor.center.empty())
+    {
+        cv::circle(input_frame, cv::Point(temp_armor.center[2], temp_armor.center[3]), energy_par.armor_R_distance_max, cv::Scalar(BUFFER_CENTER_COLOR));
+        cv::circle(input_frame, cv::Point(temp_armor.center[2], temp_armor.center[3]), energy_par.armor_R_distance_min, cv::Scalar(BUFFER_CENTER_COLOR));
+    }
+    if (!temp_armor.armor_point.empty())
+    {
+        cv::circle(input_frame, cv::Point(temp_armor.armor_point[0], temp_armor.armor_point[1]), energy_par.fan_armor_distence_max, cv::Scalar(BUFFER_ARMOR_COLOR));
+        cv::circle(input_frame, cv::Point(temp_armor.armor_point[0], temp_armor.armor_point[1]), energy_par.fan_armor_distence_min, cv::Scalar(BUFFER_ARMOR_COLOR));
+        cv::circle(input_frame, cv::Point(temp_armor.armor_point[0], temp_armor.armor_point[1]), energy_par.nms_distence_max, cv::Scalar(0, 0, 255));
+    }
     temp.emplace_back(input_frame);
     return temp;
 }

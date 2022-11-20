@@ -77,7 +77,6 @@ void frame_th()
 {
     auto mode_temp = mode;
     auto count = 0;
-    int fps = 0;
     while (1)
     {
         //线程退出
@@ -100,6 +99,7 @@ void frame_th()
         time_queue.push(time.count() / TIME_TRANSFORMER);
         img_mtx.unlock();
 
+        
         count++;
         //每发送10次校验一下输入的模式和颜色
         if (count > 10)
@@ -111,6 +111,11 @@ void frame_th()
                 mode_temp = mode;
             }
         }
+        //保存录像
+#ifdef SAVE_VIDEO
+
+#endif
+
     }
 }
 
@@ -167,9 +172,11 @@ void process_th()
         else if (mode == 1 || mode == 2)
         {
             buffer.set(mode);
+            auto frame_temp = frame.clone();
             msg = buffer.process(frame, time);
+            log_debug("msg is :", msg[0], " ", msg[1], " ", msg[2]);
             buffer.updata_argument(trans_bar_to_para(bar_buffer_global));
-            auto debug_frame = buffer.debug_frame(frame);
+            auto debug_frame = buffer.debug_frame(frame_temp);
             // buffer.update_json(PATH_ENERGY_JSON);
             cv::imshow("frame_debug", debug_frame.front());
             // cv::imshow("mask_debug", debug_frame.back());
@@ -256,7 +263,9 @@ void serial_th()
             msg_queue.pop();
         }
         msg_mtx.unlock();
+
         serial_com.send_msg(msg);
+
         count++;
         //每发送10次校验一下输入的模式和颜色
         if (count > 10)
