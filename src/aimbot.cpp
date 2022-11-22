@@ -112,7 +112,7 @@ void GetArmor::HSV_Process()
 {
     // log_debug("调用了HSV_Process");
     cv::Mat temp;
-    cv::cvtColor(frame, temp, cv::COLOR_BGR2HSV);
+    cv::cvtColor(frame, temp, cv::COLOR_RGB2HSV);
     cv::inRange(temp, cv::Scalar(load_par.lowHue, load_par.lowSat, load_par.lowVal), cv::Scalar(load_par.highHue, load_par.highSat, load_par.highVal), mask);
 }
 
@@ -221,7 +221,7 @@ void GetArmor::CombineLightBar_ground()
                 continue;
             }
             //灯条角度差过大不要
-            if ((angleDiff_caculate > angleDiff && angleDiff_caculate < 180 - angleDiff) || (angleDiff_caculate > 90 and angleDiff_caculate < 180 - yixaingangleDiff))
+            if ((angleDiff_caculate > angleDiff && angleDiff_caculate < 180 - angleDiff) || (angleDiff_caculate > 90 && angleDiff_caculate < 180 - yixaingangleDiff))
             {
                 continue;
             }
