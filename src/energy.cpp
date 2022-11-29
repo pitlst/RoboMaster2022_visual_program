@@ -370,7 +370,7 @@ double GetEnergyMac::energymac_forecast_big(double angle)
     KF.correct(measurement);
 
     cv::Mat prediction = KF.predict();
-    angle = angle + prediction.at<double>(0) * prediction.at<double>(1);
+    angle = angle + detect * prediction.at<double>(0) * prediction.at<double>(1);
     return angle;
 }
 

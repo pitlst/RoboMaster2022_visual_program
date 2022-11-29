@@ -294,7 +294,7 @@ int main()
     std::vector<int> msg_first = serial_com.get_msg();
     color = msg_first[0];
     mode = msg_first[1];
-    capture.set("HIVISION", mode);
+    capture.set(PATH_CAPTURE, mode);
     aimbot.set(color);
     buffer.set(mode);
     //开始记录初始化时间

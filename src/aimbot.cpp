@@ -181,7 +181,7 @@ void GetArmor::CombineLightBar_ground()
             auto arealongRatio = (*it_x).size.width / (*it_y).size.width;                                             //灯条长长比
             auto areawidthRatio = (*it_x).size.height / (*it_y).size.height;                                          //灯条宽宽比
             auto xCenter = ((*it_x).center.x + (*it_y).center.x) / 2;                                                 //装甲板中心x值
-            auto yCenter = ((*it_x).center.x + (*it_y).center.x) / 2;                                                 //装甲板中心y值
+            auto yCenter = ((*it_x).center.y + (*it_y).center.y) / 2;                                                 //装甲板中心y值
             auto ylength = ((*it_x).size.width + (*it_y).size.width) / 2;                                             //装甲板纵向长度
             auto xlength = EuclideanDistance((*it_x).center.x, (*it_x).center.y, (*it_y).center.x, (*it_y).center.y); //装甲板横向长度
             auto armorProp = xlength / ylength;                                                                       //装甲板长宽比

@@ -20,6 +20,9 @@
 #define PATH_SERIAL "/dev/ttyACM0"
 //模型文件路径
 #define PATH_MODEL_FILE "../asset/model/bestyao_13_416.xml"
+//相机输入源路径
+// #define PATH_CAPTURE "HIVISION"
+#define PATH_CAPTURE ""
 //能量机关模式参数-小符
 #define SMALL_ENERGY_BUFFER 1
 //能量机关模式参数-大符
