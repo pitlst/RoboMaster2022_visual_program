@@ -22,7 +22,7 @@
 #define PATH_MODEL_FILE "../asset/model/bestyao_13_416.xml"
 //相机输入源路径
 // #define PATH_CAPTURE "HIVISION"
-#define PATH_CAPTURE ""
+#define PATH_CAPTURE "../asset/test2.avi"
 //能量机关模式参数-小符
 #define SMALL_ENERGY_BUFFER 1
 //能量机关模式参数-大符
@@ -34,7 +34,7 @@
 //默认的识别颜色
 #define DEFALUTE_COLOR 0
 //默认的击打模式
-#define DEFALUTE_MODE 2
+#define DEFALUTE_MODE 1
 //debug下灯条的默认颜色
 #define LIGHTBAR_COLOR (0,255,0)
 //debug下装甲板的默认颜色
@@ -55,6 +55,10 @@
 #define MODEL_THRESHOLD 0.
 //这是模型的类别置信度阈值
 #define CLASSES_THRESHOLD 0.
+//开启此开关,旋转中心的筛选方式设为交并比
+#define CENTER_FILTER_IOU 
+//开启此开关,旋转中心的筛选方式设为加权平均
+// #define CENTER_FILTER_WEIGHTED
 
 //大符预测的最大历史记录次数
 #define BUFFER_HISTORY_LEN_MAX 300
@@ -83,6 +87,10 @@
 //开启此宏定义关闭多线程
 // #define THREADING_DEBUG
 
+
+//-------------------------------------以下是对于宏定义的处理，一般不更改-------------------------------------------------------
+
+
 //如果什么都没定义默认release
 #ifndef COMPILE_RELEASE
 #ifndef COMPILE_DEBUG
@@ -95,3 +103,14 @@
 #undef COMPILE_DEBUG
 #endif
 
+//如果什么都没定义默认使用加权平均
+#ifndef CENTER_FILTER_IOU
+#ifndef CENTER_FILTER_WEIGHTED
+#define CENTER_FILTER_WEIGHTED
+#endif
+#endif
+
+//如果定义了IOU就关闭加权平均的定义
+#ifdef CENTER_FILTER_IOU
+#undef CENTER_FILTER_WEIGHTED
+#endif

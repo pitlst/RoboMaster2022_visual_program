@@ -11,6 +11,7 @@ GetEnergyMac::GetEnergyMac()
 {
     load_json();
     openvino_init();
+    model_para_init();
     kalmanfilter_init();
 }
 
@@ -19,6 +20,7 @@ GetEnergyMac::GetEnergyMac(int input_mode)
     set(input_mode);
     load_json();
     openvino_init();
+    model_para_init();
     kalmanfilter_init();
 }
 
@@ -125,8 +127,6 @@ void GetEnergyMac::openvino_init()
     {
         throw std::logic_error("抱歉，暂时不支持该精度");
     }
-    //初始化模型参数
-    model_para_init();
 }
 
 void GetEnergyMac::model_para_init()
@@ -173,62 +173,255 @@ void GetEnergyMac::kalmanfilter_init()
 
 void GetEnergyMac::center_filter(buffer_para &buffer)
 {
-    std::vector<float> max_center;
+    std::vector<std::vector<float>> temp_center;
+    swq::buffer_para temp_buffer;
+    bool label = false;
+    if (armor.size())
+    {
+        temp_buffer = armor.back();
+        label = true;
+    }
+    //根据距离筛选出所有中心
     for (auto &ch : output_res)
     {
         if (ch[1] == 2)
         {
-            if (buffer.center.size() == 0)
+            if (label)
             {
-                buffer.center = ch;
+                //距离上次坐标过长的删掉
+                auto distance = pow(pow(ch[2] - temp_buffer.center[2], 2) + pow(ch[3] - temp_buffer.center[3], 2), 0.5);
+                if (distance > energy_par.nms_distence_max)
+                {
+                    continue;
+                }
             }
-            else if (max_center[0] < ch[0])
+            //距离本次坐标过长的删掉
+            bool label_2 = true;
+            for (auto &_ch : temp_center)
             {
-                buffer.center = ch;
+                auto distance = pow(pow(ch[2] - _ch[2], 2) + pow(ch[3] - _ch[3], 2), 0.5);
+                if (distance > energy_par.nms_distence_max)
+                {
+                    label_2 = false;
+                    break;
+                }
+            }
+            if (label_2)
+            {
+                temp_center.emplace_back(ch);
             }
         }
+    }
+    //遍历所有可能的中心nms
+    if (temp_center.size())
+    {
+#ifdef CENTER_FILTER_IOU
+        //对于第一次没有上一次做参照，直接选择置信度最高的中心返回
+        if (!label)
+        {
+            for (auto &ch : temp_center)
+            {
+                if (buffer.center.size() == 0)
+                {
+                    buffer.center = ch;
+                    continue;
+                }
+                if (buffer.center[0] < ch[0])
+                {
+                    buffer.center = ch;
+                    continue;
+                }
+            }
+        }
+        else
+        {
+            //计算上一次中心的框
+            auto last_x00 = temp_buffer.center[2] - temp_buffer.center[4] / 2;
+            auto last_y00 = temp_buffer.center[3] - temp_buffer.center[5] / 2;
+            auto last_x01 = temp_buffer.center[2] + temp_buffer.center[4] / 2;
+            auto last_y01 = temp_buffer.center[3] - temp_buffer.center[5] / 2;
+            auto last_x10 = temp_buffer.center[2] - temp_buffer.center[4] / 2;
+            auto last_y10 = temp_buffer.center[3] + temp_buffer.center[5] / 2;
+            auto last_x11 = temp_buffer.center[2] + temp_buffer.center[4] / 2;
+            auto last_y11 = temp_buffer.center[3] + temp_buffer.center[5] / 2;
+            for (auto &ch : temp_center)
+            {
+                //计算中心的框
+                auto m_x00 = ch[2] - ch[4] / 2;
+                auto m_y00 = ch[3] - ch[5] / 2;
+                auto m_x01 = ch[2] + ch[4] / 2;
+                auto m_y01 = ch[3] - ch[5] / 2;
+                auto m_x10 = ch[2] - ch[4] / 2;
+                auto m_y10 = ch[3] + ch[5] / 2;
+                auto m_x11 = ch[2] + ch[4] / 2;
+                auto m_y11 = ch[3] + ch[5] / 2;
+
+                //计算交集面积
+                auto x00 = std::min(last_x00, m_x00);
+                auto y00 = std::min(last_y00, m_y00);
+                auto x01 = std::min(last_x00, m_x00);
+                auto y01 = std::min(last_x00, m_x00);
+                auto x10 = std::min(last_x00, m_x00);
+                auto y10 = std::min(last_x00, m_x00);
+                auto x11 = std::min(last_x00, m_x00);
+                auto y11 = std::min(last_x00, m_x00);
+                //计算并集面积
+            }
+        }
+
+#endif
+#ifdef CENTER_FILTER_WEIGHTED
+        std::vector<float> average_center;
+        if (label)
+        {
+            average_center = temp_buffer.center;
+            //类别不变
+            //长宽坐标计算为置信度加权平均
+            average_center[2] = average_center[2] * average_center[0];
+            average_center[3] = average_center[3] * average_center[0];
+            average_center[4] = average_center[4] * average_center[0];
+            average_center[5] = average_center[5] * average_center[0];
+            //角度默认置为0
+            average_center[6] = 0.0;
+        }
+        else
+        {
+            average_center = {0, 0, 0, 0, 0, 0, 0};
+        }
+        for (const auto &ch : temp_center)
+        {
+            //置信度计算和
+            average_center[0] += ch[0];
+            //类别不变
+            //长宽坐标计算为置信度加权平均
+            average_center[2] += ch[2] * ch[0];
+            average_center[3] += ch[3] * ch[0];
+            average_center[4] += ch[4] * ch[0];
+            average_center[5] += ch[5] * ch[0];
+        }
+        average_center[2] = average_center[2] / average_center[0];
+        average_center[3] = average_center[3] / average_center[0];
+        average_center[4] = average_center[4] / average_center[0];
+        average_center[5] = average_center[5] / average_center[0];
+
+        //如果可以这里的计算都应转换为大整数计算
+        buffer.center = average_center;
+#endif
     }
 }
 
 void GetEnergyMac::energy_filter(buffer_para &buffer)
 {
-    std::vector<float> temp = {-1, -1, -1};
+    std::vector<std::vector<float>> nms_armor;
+    std::vector<std::vector<float>> nms_full;
     //中心没找到直接返回负数
-    if (buffer.center.size() != 0)
+    if (buffer.center.size() == 0)
     {
-        for (const auto &ch : output_res)
+        buffer.armor_point = {-1, -1, -1};
+    }
+    //装甲板和扇叶nms
+    for (const auto &ch : output_res)
+    {
+        if (ch[1] == 0)
         {
-            auto pos_true = false;
-            if (ch[1] == 0)
+            //第一次直接存进结果中
+            if (nms_armor.size() == 0)
             {
-                auto distance = pow((buffer.center[2] - ch[2]), 2) + pow((buffer.center[3] - ch[3]), 2);
-                if (distance > energy_par.armor_R_distance_min && distance < energy_par.armor_R_distance_max)
+                nms_armor.emplace_back(ch);
+                continue;
+            }
+            //遍历历史结果
+            for (auto &ch_armor : nms_armor)
+            {
+                auto distance = pow(pow(ch[2] - ch_armor[2], 2) + pow(ch[3] - ch_armor[3], 2), 0.5);
+                //在距离内并且置信度更大，替换
+                if (distance > energy_par.nms_distence_max)
                 {
-                    for (const auto &_ch : output_res)
+                    if (ch[0] > ch_armor[0])
                     {
-                        if (_ch[1] == 1)
-                        {
-                            auto _distance = pow((_ch[2] - ch[2]), 2) + pow((_ch[3] - ch[3]), 2);
-                            if (_distance > energy_par.fan_armor_distence_max && _distance < energy_par.fan_armor_distence_min)
-                            {
-                                break;
-                            }
-                        }
+                        ch_armor = ch;
                     }
-                    pos_true = true;
+                    break;
                 }
             }
-            if (pos_true)
+            //在距离外，添加
+            nms_armor.emplace_back(ch);
+        }
+        else if (ch[1] == 1)
+        {
+            //第一次直接存进结果中
+            if (nms_full.size() == 0)
             {
-                if (temp[2] != -1)
-                {
-                    log_error("存在多个待击打目标,随机选择一个，请注意");
-                }
-                temp = {ch[2], ch[3], 1};
+                nms_full.emplace_back(ch);
+                continue;
             }
+            //遍历历史结果
+            for (auto &ch_full : nms_full)
+            {
+                auto distance = pow(pow(ch[2] - ch_full[2], 2) + pow(ch[3] - ch_full[3], 2), 0.5);
+                //在距离内并且置信度更大，替换
+                if (distance > energy_par.nms_distence_max)
+                {
+                    if (ch[0] > ch_full[0])
+                    {
+                        ch_full = ch;
+                    }
+                    break;
+                }
+            }
+            //在距离外，添加
+            nms_full.emplace_back(ch);
         }
     }
-    buffer.armor_point = temp;
+
+    // if (buffer.center.size() != 0)
+    // {
+    //     for (const auto &ch : output_res)
+    //     {
+    //         auto pos_true = false;
+    //         if (ch[1] == 0)
+    //         {
+    //             auto distance = pow(pow((buffer.center[2] - ch[2]), 2) + pow((buffer.center[3] - ch[3]), 2), 0.5);
+    //             //装甲板与旋转中心距离超过阈值直接跳过
+    //             if (distance < energy_par.armor_R_distance_min * energy_par.frame_size || distance > energy_par.armor_R_distance_max * energy_par.frame_size)
+    //             {
+    //                 continue;
+    //             }
+    //             //二次遍历输出结果
+    //             for (const auto &_ch : output_res)
+    //             {
+    //                 if (_ch[1] == 1)
+    //                 {
+    //                     auto _distance = pow(pow((_ch[2] - ch[2]), 2) + pow((_ch[3] - ch[3]), 2), 0.5);
+    //                     //判断装甲板与大符中心的距离，用于判断装甲板是否被击中
+    //                     if (_distance > energy_par.fan_armor_distence_max * energy_par.frame_size && _distance < energy_par.fan_armor_distence_min * energy_par.frame_size)
+    //                     {
+    //                         break;
+    //                     }
+    //                     //如果没有被击中，遍历历史装甲板，看是不是同一个装甲板
+    //                     if (_temp.size() != 0)
+    //                     {
+    //                         for (const auto &ch_out : _temp)
+    //                         {
+
+    //                         }
+
+    //                     }
+
+    //                 }
+    //                 else
+    //                 {
+    //                     pos_true = true;
+    //                 }
+    //             }
+    //         }
+    //         if (pos_true)
+    //         {
+    //             temp = {ch[2], ch[3], 1};
+    //             _temp.emplace_back(temp);
+    //         }
+    //     }
+    // }
 }
 
 std::vector<int> GetEnergyMac::angle_predicted()
@@ -243,11 +436,13 @@ std::vector<int> GetEnergyMac::angle_predicted()
     //检查是否检测到了中心
     if (temp_buffer.center.size() == 0)
     {
+        log_debug("没有找到中心");
         return armor_point;
     }
     //检测是否检测到了目标
     if (temp_buffer.armor_point[2] == -1)
     {
+        log_debug("没有找到目标");
         return armor_point;
     }
     //判断旋转方向
@@ -396,7 +591,7 @@ void GetEnergyMac::trans_tansor_to_matrix(std::vector<ov::Tensor> out_tenosr)
     for (auto n = 0; n < 3; n++)
     {
         const float *input = out_tenosr[n].data<const float>();
-        int num_grid_x = model_par.input.n / stride[n];
+        int num_grid_x = model_par.input.w / stride[n];
         int num_grid_y = model_par.input.h / stride[n];
         auto area = num_grid_x * num_grid_y;
         //遍历anchor
@@ -471,6 +666,7 @@ void GetEnergyMac::trans_tansor_to_matrix(std::vector<ov::Tensor> out_tenosr)
                             index_temp++;
                             output_res[index][index_temp] = angle;
                             index++;
+                            // log_debug(score, ",", class_id, ",", rel_x, ",", rel_y, ",", rel_w, ",", rel_h, ",", angle);
                         }
                         //指针跳到下一个向量的开头
                         input += (classes + 2);
@@ -481,6 +677,7 @@ void GetEnergyMac::trans_tansor_to_matrix(std::vector<ov::Tensor> out_tenosr)
             }
         }
     }
+    // log_debug("--------------------------------------");
 }
 
 float GetEnergyMac::sigmoid(float input_num)

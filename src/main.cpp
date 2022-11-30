@@ -174,12 +174,11 @@ void process_th()
             buffer.set(mode);
             auto frame_temp = frame.clone();
             msg = buffer.process(frame, time);
-            log_debug("msg is :", msg[0], " ", msg[1], " ", msg[2]);
+            //log_debug("msg is :", msg[0], " ", msg[1], " ", msg[2]);
             buffer.updata_argument(trans_bar_to_para(bar_buffer_global));
             auto debug_frame = buffer.debug_frame(frame_temp);
-            // buffer.update_json(PATH_ENERGY_JSON);
+            //buffer.update_json(PATH_ENERGY_JSON);
             cv::imshow("frame_debug", debug_frame.front());
-            // cv::imshow("mask_debug", debug_frame.back());
         }
         else
         {
