@@ -21,28 +21,6 @@ namespace swq
 
     class high_float
     {
-    public:
-        //构造函数
-        high_float();
-        high_float(int input_num);                   //用一个整数构造
-        high_float(double input_num);                //用一个浮点数构造
-        high_float(const std::string &input_num);    //用一个字符串构造
-        high_float(const char *input_num);           //用一个c格式的字符串构造
-        high_float(const high_float &input_num);     //用一个高精度数构造
-        high_float(high_float &&input_num) noexcept; //移动构造
-        ~high_float() = default;
-
-        //类型转换重载
-        //浮点转换
-        operator double();
-        //字符串转换
-        operator std::string();
-
-        //运算符重载
-
-        high_float operator=(const high_float &input_num);     //赋值函数
-        high_float operator=(high_float &&input_num) noexcept; //移动赋值
-
         //基本运算符重载
         friend high_float operator+(const high_float &num1, const high_float &num2); //加法重载
         friend high_float operator-(const high_float &num1, const high_float &num2); //减法重载
@@ -65,8 +43,30 @@ namespace swq
         friend high_float operator/=(high_float &num1, const high_float &num2); //除等重载
 
         //输入输出重载
-        friend std::ostream &operator<<(std::ostream &out, const high_float &num); //输出重载
-        friend std::istream &operator>>(std::istream &in, high_float &num);        //输入重载
+        friend std::ostream &operator<<(std::ostream &out,const high_float &num); //输出重载
+        friend std::istream &operator>>(std::istream &in,high_float &num);  //输入重载
+
+    public:
+        //构造函数
+        high_float();
+        high_float(int input_num);                   //用一个整数构造
+        high_float(double input_num);                //用一个浮点数构造
+        high_float(const std::string &input_num);    //用一个字符串构造
+        high_float(const char *input_num);           //用一个c格式的字符串构造
+        high_float(const high_float &input_num);     //用一个高精度数构造
+        high_float(high_float &&input_num) noexcept; //移动构造
+        ~high_float() = default;
+
+        //类型转换重载
+        //浮点转换
+        operator double();
+        //字符串转换
+        operator std::string();
+
+        //运算符重载
+
+        high_float operator=(const high_float &input_num);     //赋值函数
+        high_float operator=(high_float &&input_num) noexcept; //移动赋值
 
         //常用函数
         //相加
@@ -83,6 +83,8 @@ namespace swq
         std::string str() const;
         //获取正负
         bool get_sign() const;
+        //更改正负
+        void set_sign(bool input_sign);
         //清空保存的数
         void clear();
         //取绝对值
@@ -112,9 +114,9 @@ namespace swq
         //用于判断正负的标志位,true为非负,false为负
         bool sign = true;
         //小数点前的每一位
-        std::shared_ptr<std::vector<char>> front_point;
+        std::vector<char> front_point;
         //小数点后的每一位
-        std::shared_ptr<std::vector<char>> back_point;
+        std::vector<char> back_point;
     };
 
 /*
@@ -177,8 +179,8 @@ namespace swq
         std::shared_ptr<std::vector<unsigned short int>> number;
     };
 */
-#define WFLOAT_ZERO WFloat::ZERO()
-#define WFLOAT_ONE WFloat::ONE()
-#define WFLOAT_TEN WFloat::TEN()
+#define HFLOAT_ZERO high_float::ZERO()
+#define HFLOAT_ONE high_float::ONE()
+#define HFLOAT_TEN high_float::TEN()
 
 }
