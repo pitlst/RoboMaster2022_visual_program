@@ -1,7 +1,9 @@
-#include "json.hpp"
 #include <iostream>
 #include <sstream>
 #include <stdexcept>
+
+#include "json.hpp"
+
 using namespace swq;
 
 json::json()

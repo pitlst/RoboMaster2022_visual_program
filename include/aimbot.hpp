@@ -68,7 +68,7 @@ namespace swq
 
     };
 
-    class GetArmor
+    class GetArmor final
     {
     public:
         GetArmor();
@@ -98,6 +98,18 @@ namespace swq
         void CombineLightBar_ground();
         //单目测距
         float GetArmorDistance(float s0, float s1);
+
+        //阻止构造一些常用的特定重载函数
+        GetArmor operator <<(const GetArmor&) = delete;
+        GetArmor operator >>(const GetArmor&) = delete;
+        GetArmor operator =(const GetArmor&) = delete;
+        GetArmor operator +(const GetArmor&) = delete;
+        GetArmor operator -(const GetArmor&) = delete;
+        GetArmor operator *(const GetArmor&) = delete;
+        GetArmor operator /(const GetArmor&) = delete;
+        GetArmor operator ++() = delete;
+        GetArmor operator --() = delete;
+        GetArmor operator &(const GetArmor&) = delete;
 
         int start_label = 0;
         bool color = DEFALUTE_COLOR;

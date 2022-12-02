@@ -28,7 +28,7 @@
 namespace swq
 {
 
-    class logger
+    class logger final
     {
     public:
         enum Level

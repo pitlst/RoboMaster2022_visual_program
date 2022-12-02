@@ -17,7 +17,7 @@
 namespace swq
 {
 
-    class GetFrame
+    class GetFrame final
     {
     public:
         GetFrame();
@@ -42,6 +42,18 @@ namespace swq
     private:
         void read_json(const std::string & input_filename);  
         void StartCamera();
+
+        //阻止构造一些常用的特定重载函数
+        GetFrame operator <<(const GetFrame&) = delete;
+        GetFrame operator >>(const GetFrame&) = delete;
+        GetFrame operator =(const GetFrame&) = delete;
+        GetFrame operator +(const GetFrame&) = delete;
+        GetFrame operator -(const GetFrame&) = delete;
+        GetFrame operator *(const GetFrame&) = delete;
+        GetFrame operator /(const GetFrame&) = delete;
+        GetFrame operator ++() = delete;
+        GetFrame operator --() = delete;
+        GetFrame operator &(const GetFrame&) = delete;
 
         int mode;
         int video_debug_set; 

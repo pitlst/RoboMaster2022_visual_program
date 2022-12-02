@@ -1,8 +1,10 @@
-#include "xml.hpp"
 #include <sstream>
 #include <iostream>
 #include <fstream>
 #include <sstream>
+
+#include "xml.hpp"
+
 using namespace swq;
 
 xml::xml()

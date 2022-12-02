@@ -1,6 +1,6 @@
 #include "get_frame.hpp"
 #include "debug.hpp"
-#include <iostream>
+
 using namespace swq;
 
 GetFrame::GetFrame()

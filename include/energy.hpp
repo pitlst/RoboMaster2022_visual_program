@@ -62,12 +62,12 @@ namespace swq
         std::string type_str;
     };
 
-    class GetEnergyMac
+    class GetEnergyMac final
     {
     public:
         GetEnergyMac();
         GetEnergyMac(int input_mode);
-        ~GetEnergyMac();
+        ~GetEnergyMac() = default;
 
         void set(int input_mode);
         std::vector<int> process(cv::Mat &input_frame, double f_time);
@@ -114,6 +114,18 @@ namespace swq
         double energymac_forecast_big(double angle);
         //检查维护目标历史记录
         void vector_protect_process();
+
+        //阻止构造一些常用的特定重载函数
+        GetEnergyMac operator <<(const GetEnergyMac&) = delete;
+        GetEnergyMac operator >>(const GetEnergyMac&) = delete;
+        GetEnergyMac operator =(const GetEnergyMac&) = delete;
+        GetEnergyMac operator +(const GetEnergyMac&) = delete;
+        GetEnergyMac operator -(const GetEnergyMac&) = delete;
+        GetEnergyMac operator *(const GetEnergyMac&) = delete;
+        GetEnergyMac operator /(const GetEnergyMac&) = delete;
+        GetEnergyMac operator ++() = delete;
+        GetEnergyMac operator --() = delete;
+        GetEnergyMac operator &(const GetEnergyMac&) = delete;
 
         //检测的开始时间
         double begin_time = 0;

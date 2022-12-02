@@ -1,9 +1,9 @@
+#include <cmath>
+
 #include "energy.hpp"
 #include "logger.hpp"
 #include "utils.hpp"
 #include "debug.hpp"
-
-#include <cmath>
 
 using namespace swq;
 
@@ -22,10 +22,6 @@ GetEnergyMac::GetEnergyMac(int input_mode)
     openvino_init();
     model_para_init();
     kalmanfilter_init();
-}
-
-GetEnergyMac::~GetEnergyMac()
-{
 }
 
 void GetEnergyMac::set(int input_mode)

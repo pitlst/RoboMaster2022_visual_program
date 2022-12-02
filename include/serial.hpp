@@ -6,7 +6,7 @@
 
 namespace swq
 {
-    class Serial
+    class Serial final
     {
     public:
         Serial();
@@ -17,6 +17,18 @@ namespace swq
         void send_msg(const std::vector<int> &msg);
 
     private:
+        //阻止构造一些常用的特定重载函数
+        Serial operator <<(const Serial&) = delete;
+        Serial operator >>(const Serial&) = delete;
+        Serial operator =(const Serial&) = delete;
+        Serial operator +(const Serial&) = delete;
+        Serial operator -(const Serial&) = delete;
+        Serial operator *(const Serial&) = delete;
+        Serial operator /(const Serial&) = delete;
+        Serial operator ++() = delete;
+        Serial operator --() = delete;
+        Serial operator &(const Serial&) = delete;
+
         //串口设备描述符
         int fd;
         //串口接受数据的缓冲区

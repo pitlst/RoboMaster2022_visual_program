@@ -10,7 +10,7 @@ namespace swq
     class json
     {
     public:
-        //json节点拥有的值的类型
+        // json节点拥有的值的类型
         enum type
         {
             json_null,
@@ -28,10 +28,10 @@ namespace swq
         json(bool input_v);
         json(int input_v);
         json(double input_v);
-        json(const char * input_v);
+        json(const char *input_v);
         json(const std::string &input_v);
         json(type input_t);
-        json(const json & input_j);
+        json(const json &input_j);
 
         //类型转换重载
 
@@ -42,12 +42,12 @@ namespace swq
 
         //运算符重载
 
-        json & operator [] (int index);
-        json & operator [] (const char * key);
-        json & operator [] (const std::string & key);
-        json & operator = (const json & other);
-        bool operator == (const json & other);
-        bool operator != (const json & other);
+        json &operator[](int index);
+        json &operator[](const char *key);
+        json &operator[](const std::string &key);
+        json &operator=(const json &other);
+        bool operator==(const json &other);
+        bool operator!=(const json &other);
 
         //判断函数
 
@@ -60,8 +60,8 @@ namespace swq
         bool isArray() const;
         bool isObject() const;
         bool has(int index);
-        bool has(const char * key);
-        bool has(const std::string & key);
+        bool has(const char *key);
+        bool has(const std::string &key);
         bool empty() const;
         int size() const;
 
@@ -75,19 +75,19 @@ namespace swq
 
         //常用方法实现
 
-        void append(const json & other);
+        void append(const json &other);
         void clear();
-        void copy(const json & other);
+        void copy(const json &other);
         void remove(int index);
-        void remove(const char * key);
-        void remove(const std::string & key);
+        void remove(const char *key);
+        void remove(const std::string &key);
         std::string str() const;
         std::string get_typename() const;
         type get_type() const;
 
         //解析函数
 
-        void parse(const std::string & str);
+        void parse(const std::string &str);
 
         //定义迭代器
 
@@ -115,9 +115,9 @@ namespace swq
     {
     public:
         parser_j();
-        parser_j(const std::string & str);
+        parser_j(const std::string &str);
 
-        void load(const std::string & str);
+        void load(const std::string &str);
         json parse();
 
     private:
