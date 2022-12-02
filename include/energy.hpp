@@ -21,9 +21,9 @@ namespace swq
         double delta_angle;
         double f_time;
         //这里的待击打点是一个三个点的空间坐标
-        std::vector<float> armor_point;
+        std::vector<double> armor_point;
         //这里的center是一个网络输出的完整列向量
-        std::vector<float> center;
+        std::vector<double> center;
     };
     //能量机关需要的筛选参数
     struct energy_para
@@ -97,7 +97,7 @@ namespace swq
         //将模型输出的tensor转换为Matrix,并按照对应形状组织起来,仅支持FP32精度
         void trans_tansor_to_matrix(std::vector<ov::Tensor> out_tenosr);
         // sigmoid函数
-        float sigmoid(float input_num);
+        double sigmoid(double input_num);
         //筛选中心
         void center_filter(buffer_para &buffer);
         //筛选被击打的装甲板
@@ -105,7 +105,7 @@ namespace swq
         //预测装甲板位置
         std::vector<int> angle_predicted();
         //判断符的旋转方向
-        int judge_rotate_direct();
+        void judge_rotate_direct();
         //笛卡尔坐标与极坐标转换
         double cartesian_to_polar(buffer_para &buffer);
         //小符预测
@@ -119,10 +119,10 @@ namespace swq
         double begin_time = 0;
         //能量机关的旋转模式
         int mode = SMALL_ENERGY_BUFFER;
-        //能量机关的旋转方向,0顺时针,1逆时针
+        //能量机关的旋转方向,-1顺时针,1逆时针
         int detect = 0;
         //能量机关的半径
-        float hitDis;
+        double hitDis;
         //处理的图像
         cv::Mat frame;
         //指向处理图像的指针
@@ -141,7 +141,7 @@ namespace swq
         //输入模型的向量
         ov::Tensor input_tensor;
         //模型输出
-        std::vector<std::vector<float>> output_res;
+        std::vector<std::vector<double>> output_res;
         //历史目标记录,使用队列存储
         std::deque<buffer_para> armor;
         //存储的筛选参数

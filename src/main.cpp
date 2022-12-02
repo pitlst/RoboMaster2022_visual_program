@@ -35,7 +35,6 @@ TOE实验室算法组---打符/自瞄程序C++版
 #include "energy.hpp"
 #include "utils.hpp"
 #include "json.hpp"
-#include "hint.hpp"
 #include "logger.hpp"
 #include "xml.hpp"
 #include "serial.hpp"

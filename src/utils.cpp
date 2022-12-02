@@ -65,7 +65,13 @@ bool swq::is_Numeric(std::string str)
 
 float swq::EuclideanDistance(float x0, float y0, float x1, float y1)
 {
-    return pow(pow(x0 - x1, 2) + pow(y0 - y1, 2), 0.5);
+    auto temp = pow(pow(x0 - x1, 2) + pow(y0 - y1, 2), 0.5);
+    //防止溢出
+    if (temp > 100000)
+    {
+        temp = 100000;
+    }
+    return temp;
 }
 
 swq::fiter_para swq::trans_bar_to_para(const swq::m_fiter_para &input_aimbot)

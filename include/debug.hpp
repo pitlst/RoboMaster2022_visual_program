@@ -29,6 +29,8 @@
 #define BIG_ENERGY_BUFFER 2
 //chono系统时钟调用单位转换常数
 #define TIME_TRANSFORMER 1000000000.0
+//高精度浮点数类的迭代位数，也就是精度
+#define ACCURACY 100
 //圆周率常数
 #define PI M_PI
 //默认的识别颜色
@@ -52,9 +54,9 @@
 
 // nms参数
 //这是模型的目标置信度阈值
-#define MODEL_THRESHOLD 0.
+#define MODEL_THRESHOLD 0.1
 //这是模型的类别置信度阈值
-#define CLASSES_THRESHOLD 0.
+#define CLASSES_THRESHOLD 0.05
 //开启此开关,旋转中心的筛选方式设为交并比
 #define CENTER_FILTER_IOU 
 //开启此开关,旋转中心的筛选方式设为加权平均
