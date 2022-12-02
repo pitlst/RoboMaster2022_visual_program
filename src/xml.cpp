@@ -275,7 +275,7 @@ parser_x::parser_x(const std::string & str)
 
 void parser_x::skip_white_space()
 {
-    while (m_str[m_idx] == ' ' || m_str[m_idx] == '\r' || m_str[m_idx] == '\n' || m_str[m_idx] == '\t')
+    while (m_str[m_idx] == ' ' or m_str[m_idx] == '\r' or m_str[m_idx] == '\n' or m_str[m_idx] == '\t')
     {
         m_idx++;
     }
@@ -300,7 +300,7 @@ xml parser_x::parse()
         }
         skip_white_space();
     }
-    if (m_str[m_idx] == '<' && (isalpha(m_str[m_idx+1]) || m_str[m_idx+1] == '_'))
+    if (m_str[m_idx] == '<' and (isalpha(m_str[m_idx+1]) or m_str[m_idx+1] == '_'))
     {
         return parse_element();
     }
@@ -419,10 +419,10 @@ xml parser_x::parse_element()
 std::string parser_x::parse_element_name()
 {
     int pos = m_idx;
-    if (isalpha(m_str[m_idx]) || (m_str[m_idx] == '_'))
+    if (isalpha(m_str[m_idx]) or (m_str[m_idx] == '_'))
     {
         m_idx++;
-        while (isalnum(m_str[m_idx]) || (m_str[m_idx] == '_') || (m_str[m_idx] == '-') || (m_str[m_idx] == ':') || (m_str[m_idx] == '.'))
+        while (isalnum(m_str[m_idx]) or (m_str[m_idx] == '_') or (m_str[m_idx] == '-') or (m_str[m_idx] == ':') or (m_str[m_idx] == '.'))
         {
             m_idx++;
         }
@@ -443,10 +443,10 @@ std::string parser_x::parse_element_text()
 std::string parser_x::parse_element_attr_key()
 {
     int pos = m_idx;
-    if (isalpha(m_str[m_idx]) || (m_str[m_idx] == '_'))
+    if (isalpha(m_str[m_idx]) or (m_str[m_idx] == '_'))
     {
         m_idx++;
-        while (isalnum(m_str[m_idx]) || (m_str[m_idx] == '_') || (m_str[m_idx] == '-') || (m_str[m_idx] == ':'))
+        while (isalnum(m_str[m_idx]) or (m_str[m_idx] == '_') or (m_str[m_idx] == '-') or (m_str[m_idx] == ':'))
         {
             m_idx++;
         }

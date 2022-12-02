@@ -90,7 +90,7 @@ void GetFrame::read_json(const std::string &input_filename)
         m_camera.offsetX = file["Aimbot"]["offsetX"];
         m_camera.offsetY = file["Aimbot"]["offsetY"];
     }
-    else if (mode == 1 || mode == 2)
+    else if (mode == 1 or mode == 2)
     {
         m_camera.width = file["Energy_mac"]["width"];
         m_camera.height = file["Energy_mac"]["height"];
@@ -373,7 +373,7 @@ cv::Mat &GetFrame::GetOneFrame()
 {
     if (open_label)
     {
-        if (video_debug_set == 1 || video_debug_set == 2)
+        if (video_debug_set == 1 or video_debug_set == 2)
         {
             auto ret = capture.read(frame);
             if (ret == false)
@@ -493,7 +493,7 @@ void GetFrame::EndCamera()
 {
     if (open_label)
     {
-        if (video_debug_set == 1 || video_debug_set == 2)
+        if (video_debug_set == 1 or video_debug_set == 2)
         {
             capture.release();
         }

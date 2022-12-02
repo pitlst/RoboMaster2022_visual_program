@@ -673,7 +673,7 @@ char parser_j::get_next_token()
 {
     if(!end_label)
     {
-        while (m_str[m_idx] == ' ' || m_str[m_idx] == '\r' || m_str[m_idx] == '\n' || m_str[m_idx] == '\t')
+        while (m_str[m_idx] == ' ' or m_str[m_idx] == '\r' or m_str[m_idx] == '\n' or m_str[m_idx] == '\t')
         {
             m_idx++;
         }
@@ -741,7 +741,7 @@ json parser_j::parse()
 
 bool parser_j::in_range(int x, int lower, int upper)
 {
-    return (x >= lower && x <= upper);
+    return (x >= lower and x <= upper);
 }
 
 json parser_j::parse_null()

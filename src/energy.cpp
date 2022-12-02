@@ -413,7 +413,7 @@ void GetEnergyMac::energy_filter(buffer_para &buffer)
         {
             auto distance = EuclideanDistance(buffer.center[2], buffer.center[3], ch[2], ch[3]);
             //装甲板与旋转中心距离超过阈值直接跳过
-            if (distance < energy_par.armor_R_distance_min * energy_par.frame_size || distance > energy_par.armor_R_distance_max * energy_par.frame_size)
+            if (distance < energy_par.armor_R_distance_min * energy_par.frame_size or distance > energy_par.armor_R_distance_max * energy_par.frame_size)
             {
                 continue;
             }
@@ -421,7 +421,7 @@ void GetEnergyMac::energy_filter(buffer_para &buffer)
             {
                 auto _distance = EuclideanDistance(_ch[2], _ch[3], ch[2], ch[3]);
                 //判断装甲板与大符中心的距离，用于判断装甲板是否被击中
-                if (_distance > energy_par.fan_armor_distence_min * energy_par.frame_size && _distance < energy_par.fan_armor_distence_max * energy_par.frame_size)
+                if (_distance > energy_par.fan_armor_distence_min * energy_par.frame_size and _distance < energy_par.fan_armor_distence_max * energy_par.frame_size)
                 {
                     //不符合要求
                     pos_true = false;
@@ -532,35 +532,35 @@ double GetEnergyMac::cartesian_to_polar(buffer_para &buffer)
     auto vectorx = buffer.armor_point[0] - buffer.center[2];
     auto vectory = buffer.armor_point[1] - buffer.center[3];
     double angle = -1;
-    if (vectorx > 0 && vectory > 0)
+    if (vectorx > 0 and vectory > 0)
     {
         angle = std::atan(std::abs(vectory / vectorx)) * 180 / PI;
     }
-    else if (vectorx < 0 && vectory > 0)
+    else if (vectorx < 0 and vectory > 0)
     {
         angle = 180.0f - std::atan(std::abs(vectory / vectorx)) * 180 / PI;
     }
-    else if (vectorx < 0 && vectory < 0)
+    else if (vectorx < 0 and vectory < 0)
     {
         angle = 180.0f + std::atan(std::abs(vectory / vectorx)) * 180 / PI;
     }
-    else if (vectorx > 0 && vectory < 0)
+    else if (vectorx > 0 and vectory < 0)
     {
         angle = 360.0f - std::atan(std::abs(vectory / vectorx)) * 180 / PI;
     }
-    else if (vectorx == 0 && vectory > 0)
+    else if (vectorx == 0 and vectory > 0)
     {
         angle = 270.0f;
     }
-    else if (vectorx == 0 && vectory <= 0)
+    else if (vectorx == 0 and vectory <= 0)
     {
         angle = 90.0f;
     }
-    else if (vectory == 0 && vectorx > 0)
+    else if (vectory == 0 and vectorx > 0)
     {
         angle = 0.0f;
     }
-    else if (vectory == 0 && vectorx <= 0)
+    else if (vectory == 0 and vectorx <= 0)
     {
         angle = 180.0f;
     }

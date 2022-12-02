@@ -2,7 +2,6 @@
 #include <string>
 #include <vector>
 #include <memory>
-#include <sstream>
 
 #include "utils.hpp"
 #include "logger.hpp"
@@ -25,11 +24,12 @@ namespace swq
     public:
         //构造函数
         high_float();
-        high_float(int input_num);
-        high_float(double input_num);
-        high_float(const std::string &input_num);
-        high_float(const char *input_num);
-        high_float(const high_float &input_num);
+        high_float(int input_num);                   //用一个整数构造
+        high_float(double input_num);                //用一个浮点数构造
+        high_float(const std::string &input_num);    //用一个字符串构造
+        high_float(const char *input_num);           //用一个c格式的字符串构造
+        high_float(const high_float &input_num);     //用一个高精度数构造
+        high_float(high_float &&input_num) noexcept; //移动构造
         ~high_float() = default;
 
         //类型转换重载
@@ -40,33 +40,33 @@ namespace swq
 
         //运算符重载
 
+        high_float operator=(const high_float &input_num);     //赋值函数
+        high_float operator=(high_float &&input_num) noexcept; //移动赋值
+
         //基本运算符重载
-        friend high_float operator+(const high_float &, const high_float &);                                    //加法重载
-        friend high_float operator-(const high_float &, const high_float &);                                    //减法重载
-        friend high_float operator*(const high_float &, const high_float &);                                    //乘法重载
-        friend high_float operator/(const high_float &, const high_float &) throw(swq::DividedByZeroException); //除法重载
-        friend high_float operator-(const high_float &);                                                        //负号重载
+        friend high_float operator+(const high_float &num1, const high_float &num2); //加法重载
+        friend high_float operator-(const high_float &num1, const high_float &num2); //减法重载
+        friend high_float operator*(const high_float &num1, const high_float &num2); //乘法重载
+        friend high_float operator/(const high_float &num1, const high_float &num2); //除法重载
+        friend high_float operator-(const high_float &num);                          //负号重载
 
         //比较重载
-        friend bool operator==(const high_float &, const high_float &); //等于重载
-        friend bool operator!=(const high_float &, const high_float &); //不等于重载
-        friend bool operator<(const high_float &, const high_float &);  //小于重载
-        friend bool operator<=(const high_float &, const high_float &); //小于等于重载
-        friend bool operator>(const high_float &, const high_float &);  //大于重载
-        friend bool operator>=(const high_float &, const high_float &); //大于等于重载
+        friend bool operator==(const high_float &num1, const high_float &num2); //等于重载
+        friend bool operator!=(const high_float &num1, const high_float &num2); //不等于重载
+        friend bool operator<(const high_float &num1, const high_float &num2);  //小于重载
+        friend bool operator<=(const high_float &num1, const high_float &num2); //小于等于重载
+        friend bool operator>(const high_float &num1, const high_float &num2);  //大于重载
+        friend bool operator>=(const high_float &num1, const high_float &num2); //大于等于重载
 
         //扩展运算符重载
-        friend high_float operator+=(high_float &, const high_float &); //加等重载
-        friend high_float operator-=(high_float &, const high_float &); //减等重载
-        friend high_float operator*=(high_float &, const high_float &); //乘等重载
-        friend high_float operator/=(high_float &, const high_float &); //除等重载
+        friend high_float operator+=(high_float &num1, const high_float &num2); //加等重载
+        friend high_float operator-=(high_float &num1, const high_float &num2); //减等重载
+        friend high_float operator*=(high_float &num1, const high_float &num2); //乘等重载
+        friend high_float operator/=(high_float &num1, const high_float &num2); //除等重载
 
         //输入输出重载
-        friend std::ostream &operator<<(std::ostream &, const high_float &); //输出重载
-        friend std::istream &operator>>(std::istream &, high_float &);       //输入重载
-
-        //禁止构造一些其它常用的运算符重载
-        high_float &operator[](const high_float &) = delete;
+        friend std::ostream &operator<<(std::ostream &out, const high_float &num); //输出重载
+        friend std::istream &operator>>(std::istream &in, high_float &num);        //输入重载
 
         //常用函数
         //相加
@@ -106,10 +106,6 @@ namespace swq
             return ten;
         };
 
-        #define WFLOAT_ZERO WFloat::ZERO()
-        #define WFLOAT_ONE WFloat::ONE()
-        #define WFLOAT_TEN WFloat::TEN()
-
     private:
         //将多余的零删去
         void trim();
@@ -121,6 +117,7 @@ namespace swq
         std::shared_ptr<std::vector<char>> back_point;
     };
 
+/*
     class high_int
     {
     public:
@@ -168,6 +165,8 @@ namespace swq
         bool get_sign() const;
         //清空保存的数
         void clear();
+        //深拷贝对应的数
+        void copy(const high_int &other);
 
     private:
         //将多余的零删去
@@ -177,4 +176,9 @@ namespace swq
         //存储数字的每一位
         std::shared_ptr<std::vector<unsigned short int>> number;
     };
+*/
+#define WFLOAT_ZERO WFloat::ZERO()
+#define WFLOAT_ONE WFloat::ONE()
+#define WFLOAT_TEN WFloat::TEN()
+
 }

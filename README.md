@@ -44,7 +44,7 @@ asset存放其他的各项资源，包括测试用的视频，存放参数的jso
 
 >unzip opencv.zip
 >
->mkdir -p build && cd build
+>mkdir -p build and cd build
 >
 >cmake ..
 >
@@ -62,7 +62,7 @@ asset存放其他的各项资源，包括测试用的视频，存放参数的jso
 
 首先，我们使用GPU进行推演，所以需要先安装opencl。
 
->mkdir neo && cd neo
+>mkdir neo and cd neo
 >
 >wget https://github.com/intel/compute-runtime/releases/download/19.41.14441/intel-gmmlib_19.3.2_amd64.deb
 >
@@ -98,7 +98,7 @@ asset存放其他的各项资源，包括测试用的视频，存放参数的jso
 
 然后开始编译，注意我们开启的项目，而且我们是c++项目，所以不开启对pythonAPI的构建。
 
->mkdir build && cd build
+>mkdir build and cd build
 >
 >cmake -DCMAKE_BUILD_TYPE=Release DENABLE_INTEL_CPU=ON  -DENABLE_INTEL_GPU=ON -DENABLE_OV_ONNX_FRONTEND=ON ..
 >
@@ -143,3 +143,5 @@ asset存放其他的各项资源，包括测试用的视频，存放参数的jso
 10. 如果出现debug时程序未正常退出，相机没有正常关闭，请运行测试项目，会自动恢复相机状态不需要拔插。
 
 11. 正式比赛请使用启动脚本开启看门狗而不是直接运行可执行文件。
+
+12. 大符中筛选部分对于浮点数的精度要求超过了我的估计，我也懒得排查那里是瓶颈，直接写个高精度类一劳永逸

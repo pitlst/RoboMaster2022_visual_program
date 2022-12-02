@@ -140,7 +140,7 @@ void process_th()
     while (1)
     {
         //线程退出
-        if (k == 27 || flag == 1)
+        if (k == 27 or flag == 1)
         {
             cv::destroyAllWindows();
             flag = 1;
@@ -168,7 +168,7 @@ void process_th()
             cv::imshow("frame_debug", debug_frame.front());
             cv::imshow("mask_debug", debug_frame.back());
         }
-        else if (mode == 1 || mode == 2)
+        else if (mode == 1 or mode == 2)
         {
             buffer.set(mode);
             auto frame_temp = frame.clone();
@@ -224,7 +224,7 @@ void process_th()
         {
             msg = aimbot.process(frame);
         }
-        else if (mode == 1 || mode == 2)
+        else if (mode == 1 or mode == 2)
         {
             buffer.set(mode);
             msg = buffer.process(frame, time);
@@ -334,7 +334,7 @@ int main()
         {
             msg = aimbot.process(frame);
         }
-        else if (mode == 1 || mode == 2)
+        else if (mode == 1 or mode == 2)
         {
             msg = buffer.process(frame, time);
         }
