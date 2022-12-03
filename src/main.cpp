@@ -39,6 +39,7 @@ TOE实验室算法组---打符/自瞄程序C++版
 #include "xml.hpp"
 #include "serial.hpp"
 #include "debug.hpp"
+#include "high_num.hpp"
 //系统库
 #include <signal.h>
 
@@ -326,7 +327,8 @@ int main()
 #endif
 #ifdef THREADING_DEBUG
     std::vector<int> msg = {-1, -1, -1};
-    while (1)
+    while (0)
+    //while (1)
     {
         auto frame = capture.GetOneFrame();
         auto time = (std::chrono::high_resolution_clock::now() - start_t).count() / TIME_TRANSFORMER;
@@ -345,6 +347,8 @@ int main()
         serial_com.send_msg(msg);
     }
 #endif
+    swq::high_float temp(1234.5678);
+    log_debug(temp.str());
     log_debug("主线程结束");
     return 0;
 }

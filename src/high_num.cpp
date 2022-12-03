@@ -44,6 +44,7 @@ namespace swq
 
     bool operator==(const high_float &num1, const high_float &num2)
     {
+        //比较长度和符号
         if (num1.sign != num2.sign)
             return false;
         if (num1.front_point.size() != num2.front_point.size())
@@ -51,7 +52,7 @@ namespace swq
         if (num1.back_point.size() != num2.back_point.size())
             return false;
 
-        // 如果长度和符号相同，那么下面逐位比较
+        //如果长度和符号相同，那么下面逐位比较
         auto iter1 = num1.back_point.begin();
         auto iter2 = num2.back_point.begin();
         while (iter1 != num1.back_point.end())
@@ -81,10 +82,13 @@ namespace swq
 
     bool operator<(const high_float &num1, const high_float &num2)
     {
-        bool sign;                // 返回值
-        if (num1.sign != num2.sign) // 如果异号
+        //返回值
+        bool sign;
+        //如果异号
+        if (num1.sign != num2.sign)
         {
-            sign = !num1.sign; // 如果num1正，则不小于;反之，则小于
+            //如果num1正，则不小于;反之，则小于
+            sign = !num1.sign;
             return sign;
         }
         else
@@ -105,17 +109,17 @@ namespace swq
                 }
             }
             // 如果整数部分等长
-            auto iter1 = num1.front_point.rbegin();
-            auto iter2 = num2.front_point.rbegin();
-            while (iter1 != num1.front_point.rend())
+            auto iter1 = num1.front_point.begin();
+            auto iter2 = num2.front_point.begin();
+            while (iter1 != num1.front_point.end())
             {
-                if (num1.sign && *iter1 < *iter2)
+                if (num1.sign and *iter1 < *iter2)
                     return true;
-                if (num1.sign && *iter1 > *iter2)
+                if (num1.sign and *iter1 > *iter2)
                     return false;
-                if (!num1.sign && *iter1 > *iter2)
+                if (!num1.sign and *iter1 > *iter2)
                     return true;
-                if (!num1.sign && *iter1 < *iter2)
+                if (!num1.sign and *iter1 < *iter2)
                     return false;
                 iter1++;
                 iter2++;
@@ -124,27 +128,27 @@ namespace swq
             // 下面比较小数部分
             auto it1 = num1.back_point.rbegin();
             auto it2 = num2.back_point.rbegin();
-            while (it1 != num1.back_point.rend() && it2 != num2.back_point.rend())
+            while (it1 != num1.back_point.rend() and it2 != num2.back_point.rend())
             {
-                if (num1.sign && *it1 < *it2)
+                if (num1.sign and *it1 < *it2)
                     return true;
-                if (num1.sign && *it1 > *it2)
+                if (num1.sign and *it1 > *it2)
                     return false;
-                if (!num1.sign && *it1 > *it2)
+                if (!num1.sign and *it1 > *it2)
                     return true;
-                if (!num1.sign && *it1 < *it2)
+                if (!num1.sign and *it1 < *it2)
                     return false;
                 it1++;
                 it2++;
             }
             // 如果整数部分，而小数部分停止前全部一样，那么看谁的小数位更多
-            return (num1.sign && it2 != num2.back_point.rend()) || (!num1.sign && it1 != num1.back_point.rend());
+            return (num1.sign and it2 != num2.back_point.rend()) or (!num1.sign and it1 != num1.back_point.rend());
         }
     }
 
     bool operator<=(const high_float &num1, const high_float &num2)
     {
-        bool sign = (num1 < num2) || (num1 == num2);
+        bool sign = (num1 < num2) or (num1 == num2);
         return sign;
     }
 
@@ -156,131 +160,160 @@ namespace swq
 
     bool operator>=(const high_float &num1, const high_float &num2)
     {
-        bool sign = (num1 > num2) || (num1 == num2);
+        bool sign = (num1 > num2) or (num1 == num2);
         return sign;
     }
 
     //扩展运算符重载
-    high_float operator+=(high_float &num1, const high_float &num2)
+    high_float operator+=(const high_float &num1, const high_float &num2)
     {
+        // lambda表达式,用于小数部分相加
+        auto back_point_add = [](const high_float &num_min, const high_float &num_max) -> high_float
+        {
+            //返回值
+            high_float return_float_;
+            //进位
+            char carry = 0;
+            //小数部分长度
+            auto num_min_back_point_size = num_min.back_point.size();
+            auto num_max_back_point_size = num_max.back_point.size();
+            //校验长度
+            if (num_min_back_point_size != num_max_back_point_size)
+            {
+                auto iter_ = num_max.back_point.rend();
+                //指向长出部分
+                iter_ = iter_ - num_min_back_point_size - 1;
+                //将多余的小数直接交给返回值
+                return_float_.back_point.assign(iter_, num_max.back_point.rend());
+            }
+            //提前声明最大大小,保证迭代器能正常索引
+            return_float_.back_point.resize(num_max_back_point_size);
+            //迭代器声明
+            auto iter_min = num_min.back_point.rbegin();
+            auto iter_max = num_max.back_point.rbegin();
+            auto iter_return = return_float_.back_point.rbegin();
+            //将指向调整到一一对应的位置
+            iter_max = iter_max - (num_min_back_point_size - num_max_back_point_size);
+            iter_return = iter_return - (num_min_back_point_size - num_max_back_point_size);
+            //开始遍历
+            while (iter_min != num_min.back_point.rend() and iter_max != num_max.back_point.rend())
+            {
+                (*iter_return) = (*iter_min) + (*iter_max) + carry;
+                // 如果大于9则进位
+                carry = ((*iter_return) > 9);
+                (*iter_return) = (*iter_return) % 10;
+                iter_min++;
+                iter_max++;
+                iter_return++;
+                
+            }
+            //如果最后有进位,付给对应的整数位
+            if (carry)
+            {
+                return_float_.front_point = {carry};
+            }
+            return return_float_;
+        };
+
+        //返回值
+        high_float return_float;
         if (num1.sign == num2.sign) // 只处理同符号数，异号由-减法处理
         {
-            std::vector<char>::iterator iter1;
-            std::vector<char>::const_iterator iter2, it;
-
             //先处理小数部分
-            int num1_back_point_size = num1.back_point.size(); // 小数部分长度
+            //小数部分长度
+            int num1_back_point_size = num1.back_point.size();
             int num2_back_point_size = num2.back_point.size();
-            char carry = 0;                                  // 进位
-            if (num1_back_point_size < num2_back_point_size) // 如果num2小数部分更长
+            //如果num2小数部分更长
+            if (num1_back_point_size < num2_back_point_size)
             {
-                iter1 = num1.back_point.begin();
-                iter2 = num2.back_point.begin();
-                iter2 = iter2 - (num1_back_point_size - num2_back_point_size); // 将指向调整到一一对应的位置
-
-                while (iter1 != num1.back_point.end() && iter2 != num2.back_point.end())
-                {
-                    (*iter1) = (*iter1) + (*iter2) + carry;
-                    carry = ((*iter1) > 9); // 如果大于9则carry=1
-                    (*iter1) = (*iter1) % 10;
-                    iter1++;
-                    iter2++;
-                }
-
-                it = num2.back_point.begin();
-                iter2 = num2.back_point.end();
-                iter2 = iter2 - num1_back_point_size - 1; // 指向长出部分
-                while (iter2 != it)
-                {
-                    num1.back_point.insert(num1.back_point.begin(), *iter2);
-                    iter2--;
-                }
-                num1.back_point.insert(num1.back_point.begin(), *iter2);
-                iter1 = num1.back_point.begin();
+                return_float = back_point_add(num1, num2);
             }
-            else if (num1_back_point_size > num2_back_point_size) // 如果num1小数部分更长，同理
+            //如果num1小数部分更长,同理
+            else if (num1_back_point_size > num2_back_point_size)
             {
-                iter1 = num1.back_point.begin();
-                iter1 = iter1 + (num1_back_point_size - num2_back_point_size);
-                // 将指向调整到一一对应的位置
-                iter2 = num2.back_point.begin();
-
-                while (iter1 != num1.back_point.end() && iter2 != num2.back_point.end())
-                {
-                    (*iter1) = (*iter1) + (*iter2) + carry;
-                    carry = ((*iter1) > 9); // 如果大于9则carry=1
-                    (*iter1) = (*iter1) % 10;
-                    iter1++;
-                    iter2++;
-                }
+                return_float = back_point_add(num2, num1);
             }
+            //如果二者等长
             else
             {
-                iter1 = num1.back_point.begin(); // 如果二者等长
-                iter2 = num2.back_point.begin();
-                while (iter1 != num1.back_point.end() && iter2 != num2.back_point.end())
-                {
-                    (*iter1) = (*iter1) + (*iter2) + carry;
-                    carry = ((*iter1) > 9); // 如果大于9则carry=1
-                    (*iter1) = (*iter1) % 10;
-                    iter1++;
-                    iter2++;
-                }
+                return_float = back_point_add(num1, num2);
             }
 
-            // 再处理整数部分
-            iter1 = num1.front_point.begin();
-            iter2 = num2.front_point.begin();
-            // 从个位开始相加
-            while (iter1 != num1.front_point.end() && iter2 != num2.front_point.end())
+            //再处理整数部分
+            //进位
+            char carry = 0;
+            //如果有值,证明浮点部分有进位
+            if (return_float.front_point.size())
             {
-                (*iter1) = (*iter1) + (*iter2) + carry;
-                carry = ((*iter1) > 9); // 如果大于9则carry=1
-                (*iter1) = (*iter1) % 10;
+                carry = 1;
+            }
+            //整数部分长度
+            int num1_front_point_size = num1.front_point.size();
+            int num2_front_point_size = num2.front_point.size();
+            //提前声明整数位的最大大小,保证迭代器正常索引
+            return_float.front_point.resize(std::max(num1_front_point_size, num2_front_point_size)+1);
+            //声明迭代器
+            auto iter1 = num1.front_point.rbegin();
+            auto iter2 = num2.front_point.rbegin();
+            auto iter_return = return_float.front_point.rbegin();
+            //从个位开始相加
+            while (iter1 != num1.front_point.rend() and iter2 != num2.front_point.rend())
+            {
+                (*iter_return) = (*iter1) + (*iter2) + carry;
+                //如果大于9则进位
+                carry = ((*iter_return) > 9); 
+                (*iter_return) = (*iter_return) % 10;
                 iter1++;
                 iter2++;
+                iter_return++;
             }
-            // 总会有一个先到达end()
-            while (iter1 != num1.front_point.end()) // 如果被加数更长，处理进位
+            //总会有一个先到达end()
+            while (iter1 != num1.front_point.rend())
             {
-                (*iter1) = (*iter1) + carry;
-                carry = ((*iter1) > 9); // 如果大于9则carry=1
-                (*iter1) = (*iter1) % 10;
+                (*iter_return) = (*iter1) + carry;
+                carry = ((*iter_return) > 9);
+                (*iter_return) = (*iter_return) % 10;
                 iter1++;
+                iter_return++;
             }
-            while (iter2 != num2.front_point.end()) // 加数更长
+            while (iter2 != num2.front_point.rend())
             {
-                char val = (*iter2) + carry;
-                carry = (val > 9);
-                val %= 10;
-                num1.front_point.push_back(val);
+                (*iter_return) = (*iter2) + carry;
+                carry = ((*iter_return) > 9);
+                (*iter_return) = (*iter_return) % 10;
                 iter2++;
+                iter_return++;
             }
-            if (carry != 0) // 如果还有进位，则说明要添加一位
+            //如果还有进位，则说明要添加一位
+            if (carry != 0)
             {
-                num1.front_point.push_back(carry);
+                *iter_return = carry;
             }
-            num1.trim();
-            return num1;
+            //处理多余的0
+            return_float.trim();
         }
+        //如果异号
         else
-        {                  // 如果异号
-            if (num1.sign) // 如果被加数为正，加数为负，相当于减等于
+        {
+            //如果被加数为正，加数为负，相当于减等于
+            if (num1.sign)
             {
-                high_float temp(-num2);
-                return num1 -= temp;
+                return_float = num1 - (-num2);
             }
             else
             {
-                high_float temp(-num1);
-                return num1 = num2 - temp;
+                return_float = num2 - (-num1);
             }
         }
+        return return_float;
     }
 
-    high_float operator-=(high_float &num1, const high_float &num2)
-    {
-        if (num1.sign == num2.sign) // 只处理同号，异号由+加法处理
+    high_float operator-=(const high_float &num1, const high_float &num2)
+    {       
+        //返回值
+        high_float return_float;
+        //只处理同号，异号由+加法处理
+        if (num1.sign == num2.sign) 
         {
             if (num1.sign) // 如果同为正
             {
@@ -311,7 +344,7 @@ namespace swq
             if (num1_back_point_size > num2_back_point_size) // 如果被减数小数部分更长
             {
                 num1_back_point_size -= num2_back_point_size; // 长出部分
-                it1 = it1 + num1_back_point_size;          // 跳过长出部分
+                it1 = it1 + num1_back_point_size;             // 跳过长出部分
             }
             else
             { // 如果减数的小数部分更长，则需要给被减数补0
@@ -324,7 +357,7 @@ namespace swq
                 it1 = num1.back_point.begin(); // 插入后需要重新指向
                 it2 = num2.back_point.begin();
             }
-            while ((it1 != num1.back_point.end()) && (it2 != num2.back_point.end()))
+            while ((it1 != num1.back_point.end()) and (it2 != num2.back_point.end()))
             {
                 (*it1) = (*it1) - (*it2) - borrow;
                 borrow = 0;
@@ -340,7 +373,7 @@ namespace swq
             auto iter1 = num1.front_point.begin();
             auto iter2 = num2.front_point.begin();
 
-            while (iter1 != num1.front_point.end() && iter2 != num2.front_point.end())
+            while (iter1 != num1.front_point.end() and iter2 != num2.front_point.end())
             {
                 (*iter1) = (*iter1) - (*iter2) - borrow;
                 borrow = 0;
@@ -370,7 +403,7 @@ namespace swq
         }
         else
         {
-            // 如果异号
+            //如果异号
             if (num1 > HFLOAT_ZERO)
             {
                 high_float temp(-num2);
@@ -382,25 +415,26 @@ namespace swq
                 return num1 = -(num2 + temp);
             }
         }
+        return return_float;
     }
 
-    high_float operator*=(high_float &num1, const high_float &num2)
+    high_float operator*=(const high_float &num1, const high_float &num2)
     {
-        high_float result(0);                               // 储存结果
-        if (num1 == HFLOAT_ZERO || num2 == HFLOAT_ZERO) // 有0做乘数得0
+        high_float result(0);                           // 储存结果
+        if (num1 == HFLOAT_ZERO or num2 == HFLOAT_ZERO) // 有0做乘数得0
             result = HFLOAT_ZERO;
         else
         {
             int size = 0;
-            std::vector<char> temp_num1(num1.front_point.begin(), num1.front_point.end());                           // 一个临时变量，用于将整数部分与小数部分合并
-            if (num1.back_point.size() != 1 || (num1.back_point.size() == 1 && (*num1.back_point.begin()) != 0)) // 如果被乘数有小数部分，插入小数
+            std::vector<char> temp_num1(num1.front_point.begin(), num1.front_point.end());                        // 一个临时变量，用于将整数部分与小数部分合并
+            if (num1.back_point.size() != 1 or (num1.back_point.size() == 1 and (*num1.back_point.begin()) != 0)) // 如果被乘数有小数部分，插入小数
             {
                 temp_num1.insert(temp_num1.begin(), num1.back_point.begin(), num1.back_point.end());
                 size += num1.back_point.size();
             }
 
-            std::vector<char> temp_num2(num2.front_point.begin(), num2.front_point.end());                           // 一个临时变量，用于将整数部分与小数部分合并
-            if (num2.back_point.size() != 1 || (num2.back_point.size() == 1 && (*num2.back_point.begin()) != 0)) // 如果被乘数有小数部分，插入小数
+            std::vector<char> temp_num2(num2.front_point.begin(), num2.front_point.end());                        // 一个临时变量，用于将整数部分与小数部分合并
+            if (num2.back_point.size() != 1 or (num2.back_point.size() == 1 and (*num2.back_point.begin()) != 0)) // 如果被乘数有小数部分，插入小数
             {
                 temp_num2.insert(temp_num2.begin(), num2.back_point.begin(), num2.back_point.end());
                 size += num2.back_point.size();
@@ -438,7 +472,7 @@ namespace swq
                 }
                 iter2++;
             }
-            result.sign = ((num1.sign && num2.sign) || (!num1.sign && !num2.sign));
+            result.sign = ((num1.sign and num2.sign) or (!num1.sign and !num2.sign));
 
             // 由于我们将小数和整数合并在一起，因此下面要把小数点重新添上
             if (size != 0)
@@ -459,7 +493,7 @@ namespace swq
         return num1;
     }
 
-    high_float operator/=(high_float &num1, const high_float &num2)
+    high_float operator/=(const high_float &num1, const high_float &num2)
     {
         if (num2 == HFLOAT_ZERO)
             throw DividedByZeroException();
@@ -476,7 +510,7 @@ namespace swq
         temp_num2.sign = true;
 
         int front_point_Size = 0; // 整数部分应为几位
-        if ((temp_num2.back_point.size() == 1) && (*(temp_num2.back_point.begin()) == 0))
+        if ((temp_num2.back_point.size() == 1) and (*(temp_num2.back_point.begin()) == 0))
         {
             // 如果除数没有小数部分，不做操作
         }
@@ -575,7 +609,7 @@ namespace swq
                 }
             }
         }
-        quotient.sign = ((num1.sign && num2.sign) || (!num1.sign && !num2.sign));
+        quotient.sign = ((num1.sign and num2.sign) or (!num1.sign and !num2.sign));
         num1 = quotient;
         num1.trim();
         return num1;
@@ -584,7 +618,7 @@ namespace swq
     //输入输出重载
     std::ostream &operator<<(std::ostream &out, const high_float &num)
     {
-        if (!num.get_sign()) // 负数
+        if (!num.sign) // 负数
         {
             out << "-";
         }
@@ -630,9 +664,12 @@ high_float::high_float(int input_num)
     input_num = std::abs(input_num);
     do
     {
-        front_point.push_back((char)(input_num % 10)); // 按位倒序写入整数部分
+        //按位倒序写入整数部分
+        front_point.push_back((char)(input_num % 10));
         input_num /= 10;
     } while (input_num != 0);
+    //小数部分写0
+    back_point.push_back(0);
 }
 
 high_float::high_float(double input_num)
@@ -642,36 +679,33 @@ high_float::high_float(double input_num)
 
 high_float::high_float(const std::string &input_num)
 {
-    // 用于判断小数与整数部分交界
+    //用于判断小数与整数部分交界
     bool type = input_num.find('.') == std::string::npos ? false : true;
 
-    // 默认为正数，读到'-'再变为负数
+    //默认为正数，读到'-'再变为负数
     sign = true;
 
-    // 逆向迭代
-    for (auto iter = input_num.crbegin(); iter < input_num.crend(); iter++)
+    //正向遍历
+    for (auto iter = input_num.cbegin(); iter < input_num.cend(); iter++)
     {
         char ch = (*iter);
-        if (ch == '.') // 遇到小数点则开始向整数部分写入
+        //遇到小数点则开始向小数数部分写入
+        if (ch == '.')
         {
             type = false;
             iter++;
         }
-        if (iter == input_num.rend() - 1) // 读取正负号
+        //读取正负号
+        if (iter == input_num.cbegin())
         {
-            if (ch == '+')
-            {
-                break;
-            }
             if (ch == '-')
             {
                 sign = false;
-                break;
             }
         }
-        // 利用逆向迭代器，将整个数据倒序存入
+        //写入时将字符串转换为数字存储
         if (type)
-            back_point.push_back((char)((*iter) - '0'));
+            front_point.push_back((char)((*iter) - '0'));
         else
             back_point.push_back((char)((*iter) - '0'));
     }
@@ -702,22 +736,7 @@ high_float::operator double()
 
 high_float::operator std::string()
 {
-    std::stringstream ss;
-    if (!sign)
-    {
-        ss << "-";
-    }
-
-    for (auto iter = front_point.crbegin(); iter < front_point.crend(); iter++)
-    {
-        ss << *iter;
-    }
-    ss << ".";
-    for (auto iter = back_point.crbegin(); iter < back_point.crend(); iter++)
-    {
-        ss << *iter;
-    }
-    return ss.str();
+    return str();
 }
 
 high_float high_float::operator=(const high_float &input_num)
@@ -736,58 +755,84 @@ high_float high_float::operator=(high_float &&input_num) noexcept
     return (*this);
 }
 
-void high_float::trim()
-{
-    // 因为我们是逆向存储的，所以整数的尾部和小数的首部可能会有多余的0
-    auto iter = front_point.rbegin();
-
-    // 对整数部分
-    while (!front_point.empty() and (*iter) == 0)
-    {
-        front_point.pop_back();      // 指向不为空且尾部为0，删去
-        iter = front_point.rbegin(); // 再次指向尾部
-                                     // 整数部分的“尾部”就是最高位，如00515.424900的左两个0
-    }
-
-    if (front_point.size() == 0 and back_point.size() == 0) // 如果整数、小数全为空
-    {
-        sign = true;
-    }
-
-    if (front_point.size() == 0) // 如果整数部分是0
-    {
-        front_point.push_back(0);
-    }
-
-    auto it = back_point.begin();
-
-    // 对小数部分
-    while (!back_point.empty() and (*it) == 0)
-    {
-        it = back_point.erase(it); // 指向不为空且首部为0，删去
-                                   // 小数部分的“首部”就是最低位，上例中的右两个0
-    }
-
-    if (back_point.size() == 0) // 如果小数部分是0
-    {
-        back_point.push_back(0);
-    }
-}
-
-bool high_float::get_sign() const
-{
-    return sign;
-}
-
-void high_float::set_sign(bool input_sign)
-{
-    sign = input_sign;
-}
-
 high_float high_float::abs() const
 {
     if (sign)
         return (*this);
     else
         return -(*this);
+}
+
+bool high_float::empty() const
+{
+    return front_point.empty() and back_point.empty();
+}
+
+void high_float::clear()
+{
+    sign = true;
+    front_point.clear();
+    back_point.clear();
+}
+
+std::string high_float::str() const
+{
+    std::stringstream ss;
+    if (!sign)
+    {
+        ss << "-";
+    }
+
+    for (auto iter = front_point.cbegin(); iter < front_point.cend(); iter++)
+    {
+        ss << (int)(*iter);
+    }
+    ss << ".";
+    for (auto iter = back_point.cbegin(); iter < back_point.cend(); iter++)
+    {
+        ss << (int)(*iter);
+    }
+    return ss.str();
+}
+
+void high_float::trim()
+{
+    //如果整数、小数全为空
+    if (front_point.size() == 0 and back_point.size() == 0)
+    {
+        sign = true;
+        return;
+    }
+    //如果整数部分是0
+    if (front_point.size() == 0)
+    {
+        front_point.push_back(0);
+    }
+    else
+    {
+        auto iter = front_point.begin();
+        //对整数部分从头遍历，直到没有0为止
+        while (!front_point.empty() and (*iter) == 0)
+        {
+            iter++;
+        }
+        //删除开头的全部0
+        front_point.erase(front_point.begin(), iter);
+    }
+    //如果小数部分是0
+    if (back_point.size() == 0)
+    {
+        back_point.push_back(0);
+    }
+    else
+    {
+        auto it = back_point.rbegin();
+        // 对小数部分
+        while (!back_point.empty() and (*it) == 0)
+        {
+            //小数部分只有结尾有0，如果有0直接删除即可
+            back_point.pop_back();
+            it = back_point.rbegin();
+        }
+    }
 }

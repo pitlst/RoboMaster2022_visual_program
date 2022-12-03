@@ -9,16 +9,6 @@
 
 namespace swq
 {
-    // 定义除零错误
-    class DividedByZeroException : std::exception
-    {
-    public:
-        char const *what() const noexcept override
-        {
-            return "Divided By Zero Exception!";
-        }
-    };
-
     class high_float
     {
         //基本运算符重载
@@ -37,10 +27,10 @@ namespace swq
         friend bool operator>=(const high_float &num1, const high_float &num2); //大于等于重载
 
         //扩展运算符重载
-        friend high_float operator+=(high_float &num1, const high_float &num2); //加等重载
-        friend high_float operator-=(high_float &num1, const high_float &num2); //减等重载
-        friend high_float operator*=(high_float &num1, const high_float &num2); //乘等重载
-        friend high_float operator/=(high_float &num1, const high_float &num2); //除等重载
+        friend high_float operator+=(const high_float &num1, const high_float &num2); //加等重载
+        friend high_float operator-=(const high_float &num1, const high_float &num2); //减等重载
+        friend high_float operator*=(const high_float &num1, const high_float &num2); //乘等重载
+        friend high_float operator/=(const high_float &num1, const high_float &num2); //除等重载
 
         //输入输出重载
         friend std::ostream &operator<<(std::ostream &out,const high_float &num); //输出重载
@@ -70,21 +60,15 @@ namespace swq
 
         //常用函数
         //相加
-        high_float &add(const high_float &other);
+        high_float & add(const high_float &other);
         //相乘
-        high_float &multiply(const high_float &other);
+        high_float & multiply(const high_float &other);
         //幂运算
-        high_float &pow(const high_float &other);
+        high_float & pow(const high_float &other);
         //检测是否有数
         bool empty() const;
-        //返回数的迭代精度
-        int max_size() const;
         //转换成字符串
         std::string str() const;
-        //获取正负
-        bool get_sign() const;
-        //更改正负
-        void set_sign(bool input_sign);
         //清空保存的数
         void clear();
         //取绝对值
