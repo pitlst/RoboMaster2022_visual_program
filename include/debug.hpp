@@ -29,7 +29,7 @@
 #define BIG_ENERGY_BUFFER 2
 //chono系统时钟调用单位转换常数
 #define TIME_TRANSFORMER 1000000000.0
-//高精度浮点数类的迭代位数，也就是精度
+//高精度浮点数类的迭代位数，也就是除法的精度
 #define ACCURACY 100
 //圆周率常数
 #define PI M_PI

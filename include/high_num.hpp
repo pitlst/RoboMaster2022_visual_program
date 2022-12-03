@@ -27,10 +27,10 @@ namespace swq
         friend bool operator>=(const high_float &num1, const high_float &num2); //大于等于重载
 
         //扩展运算符重载
-        friend high_float operator+=(const high_float &num1, const high_float &num2); //加等重载
-        friend high_float operator-=(const high_float &num1, const high_float &num2); //减等重载
-        friend high_float operator*=(const high_float &num1, const high_float &num2); //乘等重载
-        friend high_float operator/=(const high_float &num1, const high_float &num2); //除等重载
+        friend high_float operator+=(high_float &num1, const high_float &num2); //加等重载
+        friend high_float operator-=(high_float &num1, const high_float &num2); //减等重载
+        friend high_float operator*=(high_float &num1, const high_float &num2); //乘等重载
+        friend high_float operator/=(high_float &num1, const high_float &num2); //除等重载
 
         //输入输出重载
         friend std::ostream &operator<<(std::ostream &out,const high_float &num); //输出重载

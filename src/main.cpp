@@ -347,8 +347,10 @@ int main()
         serial_com.send_msg(msg);
     }
 #endif
-    swq::high_float temp(1234.5678);
-    log_debug(temp.str());
+    swq::high_float temp(1234.0);
+    swq::high_float temp2(2.0000);
+    temp = temp / temp2;
+    log_debug(temp);
     log_debug("主线程结束");
     return 0;
 }
