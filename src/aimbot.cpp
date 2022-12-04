@@ -2,6 +2,7 @@
 #include "logger.hpp"
 #include "debug.hpp"
 #include "utils.hpp"
+#include "high_num.hpp"
 
 using namespace swq;
 
@@ -183,7 +184,7 @@ void GetArmor::CombineLightBar_ground()
             auto xCenter = ((*it_x).center.x + (*it_y).center.x) / 2;                                                 //装甲板中心x值
             auto yCenter = ((*it_x).center.y + (*it_y).center.y) / 2;                                                 //装甲板中心y值
             auto ylength = ((*it_x).size.width + (*it_y).size.width) / 2;                                             //装甲板纵向长度
-            auto xlength = EuclideanDistance((*it_x).center.x, (*it_x).center.y, (*it_y).center.x, (*it_y).center.y); //装甲板横向长度
+            auto xlength = (float)EuclideanDistance((*it_x).center.x, (*it_x).center.y, (*it_y).center.x, (*it_y).center.y); //装甲板横向长度
             auto armorProp = xlength / ylength;                                                                       //装甲板长宽比
             auto armorArea = xlength * ylength;                                                                       //装甲板面积
             auto angle = abs(((*it_x).center.y - (*it_y).center.y) / ((*it_x).center.x - (*it_y).center.x));          //装甲板角度
@@ -274,7 +275,7 @@ void GetArmor::CombineLightBar_ground()
         {
             for (auto &realCenter : *realCenter_list)
             {
-                auto armor_imgcenter_distence = EuclideanDistance(realCenter[0], realCenter[1], img_xCenter, img_yCenter);
+                auto armor_imgcenter_distence = (double)EuclideanDistance(realCenter[0], realCenter[1], img_xCenter, img_yCenter);
                 if (temp_distence > armor_imgcenter_distence or temp_distence == -1)
                     temp_distence = armor_imgcenter_distence;
                 x = realCenter[0];

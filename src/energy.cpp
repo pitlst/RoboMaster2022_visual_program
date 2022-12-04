@@ -62,6 +62,19 @@ void GetEnergyMac::load_json()
 
     load_energy.clear();
     load_camera.clear();
+
+
+    //高精度整数计算量较大,提前计算好
+    nms_limit = high_float(energy_par.nms_distence_max * energy_par.frame_size);
+    nms_limit = nms_limit * nms_limit;
+    armor_R_limit_min = high_float(energy_par.armor_R_distance_min * energy_par.frame_size);
+    armor_R_limit_min = armor_R_limit_min * armor_R_limit_min;
+    armor_R_limit_max = high_float(energy_par.armor_R_distance_max * energy_par.frame_size);
+    armor_R_limit_max = armor_R_limit_max * armor_R_limit_max;
+    fan_armor_limit_min = high_float(energy_par.fan_armor_distence_min * energy_par.frame_size);
+    fan_armor_limit_min = fan_armor_limit_min * fan_armor_limit_min;
+    fan_armor_limit_max = high_float(energy_par.fan_armor_distence_max * energy_par.frame_size);
+    fan_armor_limit_max = fan_armor_limit_max * fan_armor_limit_max;
 }
 
 std::vector<int> GetEnergyMac::process(cv::Mat &input_frame, double f_time)
@@ -191,7 +204,7 @@ void GetEnergyMac::center_filter(buffer_para &buffer)
             {
                 //距离上次坐标过长的删掉
                 auto distance = EuclideanDistance(ch[2], ch[3], temp_buffer.center[2], temp_buffer.center[3]);
-                if (distance > energy_par.nms_distence_max * energy_par.frame_size)
+                if (distance > nms_limit)
                 {
                     continue;
                 }
@@ -201,7 +214,7 @@ void GetEnergyMac::center_filter(buffer_para &buffer)
             for (auto &_ch : temp_center)
             {
                 auto distance = EuclideanDistance(ch[2], ch[3], _ch[2], _ch[3]);
-                if (distance > energy_par.nms_distence_max * energy_par.frame_size)
+                if (distance > nms_limit)
                 {
                     label_2 = false;
                     break;
@@ -237,38 +250,38 @@ void GetEnergyMac::center_filter(buffer_para &buffer)
         else
         {
             //计算上一次中心的框
-            auto last_x00 = temp_buffer.center[2] - temp_buffer.center[4] / 2;
-            auto last_y00 = temp_buffer.center[3] - temp_buffer.center[5] / 2;
-            auto last_x11 = temp_buffer.center[2] + temp_buffer.center[4] / 2;
-            auto last_y11 = temp_buffer.center[3] + temp_buffer.center[5] / 2;
+            high_float last_x00 = temp_buffer.center[2] - temp_buffer.center[4] / 2;
+            high_float last_y00 = temp_buffer.center[3] - temp_buffer.center[5] / 2;
+            high_float last_x11 = temp_buffer.center[2] + temp_buffer.center[4] / 2;
+            high_float last_y11 = temp_buffer.center[3] + temp_buffer.center[5] / 2;
 
-            double last_iou;
+            high_float last_iou;
             for (auto &ch : temp_center)
             {
                 //计算中心的框
-                auto m_x00 = ch[2] - ch[4] / 2;
-                auto m_y00 = ch[3] - ch[5] / 2;
-                auto m_x11 = ch[2] + ch[4] / 2;
-                auto m_y11 = ch[3] + ch[5] / 2;
+                high_float m_x00 = ch[2] - ch[4] / 2;
+                high_float m_y00 = ch[3] - ch[5] / 2;
+                high_float m_x11 = ch[2] + ch[4] / 2;
+                high_float m_y11 = ch[3] + ch[5] / 2;
 
                 //计算并集面积
-                auto x00 = std::min(last_x00, m_x00);
-                auto y00 = std::min(last_y00, m_y00);
-                auto x11 = std::max(last_x11, m_x11);
-                auto y11 = std::max(last_y11, m_y11);
-                auto area_max = std::abs(x00 - x11) * std::abs(y00 - y11);
+                auto x00 = min(last_x00, m_x00);
+                auto y00 = min(last_y00, m_y00);
+                auto x11 = max(last_x11, m_x11);
+                auto y11 = max(last_y11, m_y11);
+                auto area_max = (x00 - x11).abs() * (y00 - y11).abs();
 
-                if (area_max == 0)
+                if (area_max == HFLOAT_ZERO)
                 {
                     continue;
                 }
 
                 //计算交集面积
-                x00 = std::max(last_x00, m_x00);
-                y00 = std::max(last_y00, m_y00);
-                x11 = std::min(last_x11, m_x11);
-                y11 = std::min(last_y11, m_y11);
-                auto area_min = std::abs(x00 - x11) * std::abs(y00 - y11);
+                x00 = max(last_x00, m_x00);
+                y00 = max(last_y00, m_y00);
+                x11 = min(last_x11, m_x11);
+                y11 = min(last_y11, m_y11);
+                auto area_min = (x00 - x11).abs() * (y00 - y11).abs();
 
                 auto IOU = area_min / area_max;
                 //选择交并比最大的中心
@@ -354,7 +367,7 @@ void GetEnergyMac::energy_filter(buffer_para &buffer)
             {
                 auto distance = EuclideanDistance(ch[2], ch[3], ch_armor[2], ch_armor[3]);
                 //在距离内并且置信度更大，替换
-                if (distance > energy_par.nms_distence_max * energy_par.frame_size)
+                if (distance > nms_limit)
                 {
                     if (ch[0] > ch_armor[0])
                     {
@@ -384,7 +397,7 @@ void GetEnergyMac::energy_filter(buffer_para &buffer)
             {
                 auto distance = EuclideanDistance(ch[2], ch[3], ch_full[2], ch_full[3]);
                 //在距离内并且置信度更大，替换
-                if (distance > energy_par.nms_distence_max * energy_par.frame_size)
+                if (distance > nms_limit)
                 {
                     if (ch[0] > ch_full[0])
                     {
@@ -413,7 +426,7 @@ void GetEnergyMac::energy_filter(buffer_para &buffer)
         {
             auto distance = EuclideanDistance(buffer.center[2], buffer.center[3], ch[2], ch[3]);
             //装甲板与旋转中心距离超过阈值直接跳过
-            if (distance < energy_par.armor_R_distance_min * energy_par.frame_size or distance > energy_par.armor_R_distance_max * energy_par.frame_size)
+            if (distance < armor_R_limit_min or distance > armor_R_limit_max)
             {
                 continue;
             }
@@ -421,7 +434,7 @@ void GetEnergyMac::energy_filter(buffer_para &buffer)
             {
                 auto _distance = EuclideanDistance(_ch[2], _ch[3], ch[2], ch[3]);
                 //判断装甲板与大符中心的距离，用于判断装甲板是否被击中
-                if (_distance > energy_par.fan_armor_distence_min * energy_par.frame_size and _distance < energy_par.fan_armor_distence_max * energy_par.frame_size)
+                if (_distance > fan_armor_limit_min and _distance < fan_armor_limit_max)
                 {
                     //不符合要求
                     pos_true = false;
@@ -748,6 +761,18 @@ swq::energy_para GetEnergyMac::get_argument()
 void GetEnergyMac::updata_argument(const swq::energy_para &input)
 {
     energy_par = input;
+
+    //高精度整数计算量较大,提前计算好
+    nms_limit = high_float(energy_par.nms_distence_max * energy_par.frame_size);
+    nms_limit = nms_limit * nms_limit;
+    armor_R_limit_min = high_float(energy_par.armor_R_distance_min * energy_par.frame_size);
+    armor_R_limit_min = armor_R_limit_min * armor_R_limit_min;
+    armor_R_limit_max = high_float(energy_par.armor_R_distance_max * energy_par.frame_size);
+    armor_R_limit_max = armor_R_limit_max * armor_R_limit_max;
+    fan_armor_limit_min = high_float(energy_par.fan_armor_distence_min * energy_par.frame_size);
+    fan_armor_limit_min = fan_armor_limit_min * fan_armor_limit_min;
+    fan_armor_limit_max = high_float(energy_par.fan_armor_distence_max * energy_par.frame_size);
+    fan_armor_limit_max = fan_armor_limit_max * fan_armor_limit_max;
 }
 
 void GetEnergyMac::update_json(const std::string &filename)

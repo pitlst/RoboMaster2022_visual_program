@@ -63,14 +63,11 @@ bool swq::is_Numeric(std::string str)
     return true;
 }
 
-float swq::EuclideanDistance(float x0, float y0, float x1, float y1)
+swq::high_float swq::EuclideanDistance(float x0, float y0, float x1, float y1)
 {
-    auto temp = pow(pow(x0 - x1, 2) + pow(y0 - y1, 2), 0.5);
-    //防止溢出
-    if (temp > 100000)
-    {
-        temp = 100000;
-    }
+    high_float num1(x0 - x1);
+    high_float num2(y0 - y1);
+    high_float temp = num1 * num1 + num2 * num2;
     return temp;
 }
 

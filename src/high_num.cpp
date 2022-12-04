@@ -747,6 +747,24 @@ namespace swq
         num = high_float(str);
         return in;
     }
+
+    high_float min(const high_float &num1, const high_float &num2)
+    {
+        if (num1 > num2)
+        {
+            return num2;
+        }
+        return num1;
+    }
+
+    high_float max(const high_float &num1, const high_float &num2)
+    {
+        if (num1 > num2)
+        {
+            return num1;
+        }
+        return num2;
+    }
 }
 
 using namespace swq;
@@ -837,7 +855,7 @@ high_float::high_float(high_float &&input_num) noexcept
 
 high_float::operator double()
 {
-    return std::stod(std::string(*this));
+    return std::stod((*this).str());
 }
 
 high_float::operator std::string()

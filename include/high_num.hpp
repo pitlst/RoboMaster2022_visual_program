@@ -39,6 +39,9 @@ namespace swq
         friend std::ostream &operator<<(std::ostream &out, const high_float &num); //输出重载
         friend std::istream &operator>>(std::istream &in, high_float &num);        //输入重载
 
+        friend high_float min(const high_float &num1, const high_float &num2); //获取小值
+        friend high_float max(const high_float &num1, const high_float &num2); //获取大值
+
     public:
         //构造函数
         high_float();

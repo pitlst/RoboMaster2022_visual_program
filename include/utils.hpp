@@ -4,6 +4,7 @@
 #include "aimbot.hpp"
 #include "energy.hpp"
 #include "debug.hpp"
+#include "high_num.hpp"
 
 //用于获取变量名称
 #define NAME(variable) (#variable)
@@ -84,8 +85,8 @@ namespace swq
     //判断字符串是否为纯数字组成
     bool is_Numeric(std::string str);
 
-    //计算欧式距离
-    float EuclideanDistance(float x0, float y0, float x1, float y1);
+    //计算欧式距离的平方
+    high_float EuclideanDistance(float x0, float y0, float x1, float y1);
 
     //创建自瞄的滑动条
     void bar_creat_aimbot(m_fiter_para &input_par);

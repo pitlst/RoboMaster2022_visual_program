@@ -164,6 +164,14 @@ namespace swq
         cv::KalmanFilter KF;
         //初始测量值x'(0)
         cv::Mat measurement;
+        
+        //常用高精度整数
+        high_float nms_limit;
+        high_float armor_R_limit_min;
+        high_float armor_R_limit_max;
+        high_float fan_armor_limit_min;
+        high_float fan_armor_limit_max;
+
 
         //模型的anchor直接写死在这里了,如果需要更改训练程序中的anchor，请配合更改这里
         const float anchors[3][6] = {{4, 5, 8, 10, 13, 16}, {23, 29, 43, 55, 73, 105}, {146, 217, 231, 300, 335, 433}};
