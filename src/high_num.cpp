@@ -1,6 +1,5 @@
 #include <string>
 #include <sstream>
-#include <deque>
 
 #include "high_num.hpp"
 
@@ -173,30 +172,39 @@ namespace swq
             //小数部分长度
             auto num_min_back_point_size = num_min.back_point.size();
             auto num_max_back_point_size = num_max.back_point.size();
+            //提前声明最大大小,保证迭代器能正常索引
+            return_float_.back_point.resize(num_max_back_point_size);
             //校验长度
             if (num_min_back_point_size != num_max_back_point_size)
             {
-                auto iter_ = num_max.back_point.rend();
+                auto iter_ = num_max.back_point.begin();
+                auto iter_re_ = return_float_.back_point.begin();
                 //指向长出部分
-                iter_ = iter_ - num_min_back_point_size - 1;
-                //将多余的小数直接交给返回值
-                return_float_.back_point.assign(iter_, num_max.back_point.rend());
+                iter_ = iter_ + num_min_back_point_size;
+                iter_re_ = iter_re_ + num_min_back_point_size;
+                //将多余的小数交给返回值
+                while (iter_ != num_max.back_point.end() or iter_re_ != return_float_.back_point.end())
+                {
+                    (*iter_re_) = (*iter_);
+                    iter_++;
+                    iter_re_++;
+                }
             }
-            //提前声明最大大小,保证迭代器能正常索引
-            return_float_.back_point.resize(num_max_back_point_size);
             //迭代器声明
             auto iter_min = num_min.back_point.rbegin();
             auto iter_max = num_max.back_point.rbegin();
             auto iter_return = return_float_.back_point.rbegin();
             //将指向调整到一一对应的位置
-            iter_max = iter_max - (num_min_back_point_size - num_max_back_point_size);
-            iter_return = iter_return - (num_min_back_point_size - num_max_back_point_size);
+            iter_max = iter_max + (num_max_back_point_size - num_min_back_point_size);
+            iter_return = iter_return + (num_max_back_point_size - num_min_back_point_size);
             //开始遍历
             while (iter_min != num_min.back_point.rend() and iter_max != num_max.back_point.rend())
             {
                 (*iter_return) = (*iter_min) + (*iter_max) + carry;
                 // 如果大于9则进位
-                carry = ((*iter_return) > 9);
+                carry = 0;
+                if ((*iter_return) > 9)
+                    carry = 1;
                 (*iter_return) = (*iter_return) % 10;
                 iter_min++;
                 iter_max++;
@@ -214,7 +222,7 @@ namespace swq
         high_float return_float;
         if (num1.sign == num2.sign) // 只处理同符号数，异号由-减法处理
         {
-            //先处理小数部分
+            //处理小数部分
             //小数部分长度
             int num1_back_point_size = num1.back_point.size();
             int num2_back_point_size = num2.back_point.size();
@@ -234,7 +242,7 @@ namespace swq
                 return_float = back_point_add(num1, num2);
             }
 
-            //再处理整数部分
+            //处理整数部分
             //进位
             char carry = 0;
             //如果有值,证明浮点部分有进位
@@ -333,8 +341,8 @@ namespace swq
                 //提前声明整数位的最大大小,保证迭代器正常索引
                 return_float.back_point.resize(std::max(num1_back_point_size, num2_back_point_size));
                 //缓存的临时变量
-                std::vector<char> temp_num1(num1.back_point.begin(), num1.back_point.end());
-                std::vector<char> temp_num2(num2.back_point.begin(), num2.back_point.end());
+                std::deque<char> temp_num1(num1.back_point.begin(), num1.back_point.end());
+                std::deque<char> temp_num2(num2.back_point.begin(), num2.back_point.end());
                 auto iter1_f = temp_num1.rbegin();
                 auto iter2_f = temp_num2.rbegin();
                 auto iter_return_f = return_float.back_point.rbegin();
@@ -348,7 +356,7 @@ namespace swq
                 }
                 //如果被减数小数部分更长,需要补0
                 else
-                { 
+                {
                     //如果减数的小数部分更长，则需要给被减数补0
                     int number = num2_back_point_size - num1_back_point_size;
                     while (number != 0)
@@ -435,26 +443,23 @@ namespace swq
         {
             //建立两个临时性变量，去除多余0
             high_float temp1(num1);
-            temp1.trim();
             high_float temp2(num2);
-            temp2.trim();
-            //乘法的总体思想就是把数换成科学计数法使用，先把实数部分相乘，然后移动小数点
             //该变量用于保存小数点移动的位数
             int size = 0;
             //一个临时变量，用于将整数部分与小数部分合并
-            std::vector<char> temp_num1(temp1.front_point.begin(), temp1.front_point.end());
+            std::deque<char> temp_num1(temp1.front_point.begin(), temp1.front_point.end());
             //如果被乘数有小数部分，插入小数
-            if (temp1.back_point.size() != 1 or (temp1.back_point.size() == 1 and (*temp1.back_point.begin()) != 0))
+            if (temp1.back_point.size() > 1 or (temp1.back_point.size() == 1 and (*temp1.back_point.begin()) != 0))
             {
-                temp_num1.insert(temp_num1.begin(), temp1.back_point.begin(), temp1.back_point.end());
+                temp_num1.insert(temp_num1.end(), temp1.back_point.begin(), temp1.back_point.end());
                 size += temp1.back_point.size();
             }
             //一个临时变量，用于将整数部分与小数部分合并
-            std::vector<char> temp_num2(temp2.front_point.begin(), temp2.front_point.end());
+            std::deque<char> temp_num2(temp2.front_point.begin(), temp2.front_point.end());
             //如果被乘数有小数部分，插入小数
-            if (temp2.back_point.size() != 1 or (temp2.back_point.size() == 1 and (*temp2.back_point.begin()) != 0))
+            if (temp2.back_point.size() > 1 or (temp2.back_point.size() == 1 and (*temp2.back_point.begin()) != 0))
             {
-                temp_num2.insert(temp_num2.begin(), temp2.back_point.begin(), temp2.back_point.end());
+                temp_num2.insert(temp_num2.end(), temp2.back_point.begin(), temp2.back_point.end());
                 size += temp2.back_point.size();
             }
             temp1.clear();
@@ -480,11 +485,11 @@ namespace swq
                     }
                     if (carry != 0)
                     {
-                        temp.push_front(carry);
+                        temp.emplace_front(carry);
                     }
                     int num_of_zeros = iter2 - temp_num2.rbegin(); //计算错位
                     while (num_of_zeros--)
-                        temp.push_back(0); //乘得结果后面添0
+                        temp.emplace_back(0); //乘得结果后面添0
                     high_float temp2;
                     temp2.front_point.clear();
                     temp2.front_point.insert(temp2.front_point.end(), temp.begin(), temp.end());
@@ -502,11 +507,13 @@ namespace swq
                 {
                     int n = size - return_float.front_point.size();
                     for (int i = 0; i <= n; i++)
-                        return_float.front_point.insert(return_float.front_point.end(), 0);
+                        return_float.front_point.insert(return_float.front_point.begin(), 0);
                 }
+                //移动小数点
+                size = return_float.front_point.size() - size;
                 return_float.back_point.clear();
-                return_float.back_point.insert(return_float.back_point.begin(), return_float.front_point.begin(), return_float.front_point.begin() + size);
-                return_float.front_point.erase(return_float.front_point.begin(), return_float.front_point.begin() + size);
+                return_float.back_point.insert(return_float.back_point.begin(), return_float.front_point.begin() + size, return_float.front_point.end());
+                return_float.front_point.erase(return_float.front_point.begin() + size, return_float.front_point.end());
             }
         }
         return_float.trim();
@@ -516,27 +523,27 @@ namespace swq
     high_float operator/(const high_float &num1, const high_float &num2)
     {
         if (num2 == HFLOAT_ZERO)
+        {
             throw std::logic_error("除数为0");
+        }
         if (num1 == HFLOAT_ZERO)
+        {
             return HFLOAT_ZERO;
+        }
         if (num1 == num2)
+        {
             return HFLOAT_ONE;
-        //返回值
-        high_float return_float;
+        }
         high_float temp_num1 = num1;
         high_float temp_num2 = num2;
         //转换成无符号除法来做
         temp_num1.sign = true;
         temp_num2.sign = true;
-        //整数部分应为几位
-        if ((temp_num2.back_point.size() == 1) and (*(temp_num2.back_point.begin()) == 0))
+        //把除数和被除数变成整数
+        if (temp_num2.back_point.size() > 1 or ((temp_num2.back_point.size() == 1) and (*(temp_num2.back_point.begin()) != 0)))
         {
-            //如果除数没有小数部分，不做操作
-        }
-        else
-        {
-            //否则把除数和乘数同时扩大，直到除数为整数（只对front_point部分运算）
-            int t = temp_num2.back_point.size();
+            //有小数部分就把除数和乘数同时扩大，直到除数为整数
+            int t = std::max(temp_num2.back_point.size(), temp_num1.back_point.size());
             while (t--)
             {
                 temp_num1 = temp_num1 * HFLOAT_TEN;
@@ -544,97 +551,170 @@ namespace swq
             }
         }
         int front_point_Size = 0;
+        int back_point_size = 0;
         //被除数小于除数，应该是0.xxx
         if (temp_num1 < temp_num2)
         {
             while (temp_num1 < temp_num2)
             {
                 temp_num1 *= HFLOAT_TEN;
-                front_point_Size--;
-            }
-        }
-        else
-        {
-            while (temp_num1 > temp_num2)
-            {
-                temp_num1.back_point.push_back(*temp_num1.front_point.begin());
-                temp_num1.front_point.erase(temp_num1.front_point.begin());
                 front_point_Size++;
             }
         }
 
+        //极限迭代次数
         int k = ACCURACY;
         //商
-        high_float quotient(0);
-
+        high_float return_float(0);
+        //试商的被除数
+        high_float compare;
+        //试商的除数
+        high_float divisor;
+        //构造第一次试商的被除数
+        decltype(compare.front_point) temp;
+        auto it_num1 = temp_num1.front_point.begin();
+        it_num1 += temp_num2.front_point.size();
+        temp.insert(temp.begin(), temp_num1.front_point.begin(), it_num1);
+        compare.front_point.swap(temp);
+        //试商
         while (k--)
         {
-            if (temp_num1 < temp_num2)
+            if (compare < temp_num2)
             {
-                temp_num1 = temp_num1 * HFLOAT_TEN;
-                quotient = quotient * HFLOAT_TEN;
-            }
-            else
-            {
-                int i;
-                high_float compare;
-                for (i = 1; i <= 10; i++) // “试商”
+                //如果被除数更小,乘10
+                if (it_num1 != temp_num1.front_point.end())
                 {
-                    high_float BF(i);
-                    compare = temp_num2 * BF;
-                    if (compare > temp_num1)
-                        break;
+                    compare.front_point.emplace_back(*it_num1);
+                    compare.trim();
+                    it_num1++;
                 }
-                compare -= temp_num2;
-                temp_num1 -= compare;
-                high_float index(i - 1);
-                quotient = quotient + index;
-            }
-        }
-
-        if (front_point_Size < 0) // 如果是小数除以大数，结果为0.xxx
-        {
-            std::vector<char> temp(quotient.front_point.begin(), quotient.front_point.end());
-            quotient.front_point.clear();
-            quotient.front_point.push_back(0); // 整数部分为0
-
-            quotient.back_point.clear();
-            int count_zero = -front_point_Size;
-            // 下面先补充前导0
-            while (--count_zero)
-            {
-                quotient.back_point.insert(quotient.back_point.begin(), 0);
-            }
-            quotient.back_point.insert(quotient.back_point.begin(), temp.begin(), temp.end());
-        }
-        else
-        {
-            if (quotient.front_point.size() > front_point_Size)
-            {
-                std::vector<char> temp(quotient.front_point.begin(), quotient.front_point.end());
-
-                quotient.front_point.clear(); // 这里如果不清空会有错误
-
-                quotient.front_point.assign(temp.end() - front_point_Size, temp.end());
-
-                quotient.back_point.clear(); // 同理需要清空
-
-                quotient.back_point.insert(quotient.back_point.begin(), temp.begin(), temp.end() - front_point_Size);
-            }
-            else
-            {
-                // 这一部分意义不明，我觉得不会走到这个分支
-                int t = front_point_Size - quotient.front_point.size();
-                while (t--)
+                else
                 {
-                    quotient = quotient * HFLOAT_TEN;
+                    compare.front_point.emplace_back((char)0);
+                    compare.trim();
+                    back_point_size++;
                 }
             }
+            int i;
+            for (i = 1; i <= 10; i++)
+            {
+                high_float BF(i);
+                divisor = temp_num2 * BF;
+                if (divisor > compare)
+                    break;
+            }
+            //真正的除数
+            divisor -= temp_num2;
+            //本次试商除完的被除数
+            compare -= divisor;
+            //真正的商
+            high_float index(i - 1);
+            return_float = return_float * HFLOAT_TEN + index;
         }
-        quotient.sign = ((num1.sign and num2.sign) or (!num1.sign and !num2.sign));
-        return_float = quotient;
+        //如果是小数除以大数，结果为0.xxx
+        if (front_point_Size)
+        {
+            std::deque<char> temp(return_float.front_point.begin(), return_float.front_point.end());
+            return_float.front_point.clear();
+            return_float.front_point.emplace_back(0); //整数部分为0
+            return_float.back_point.clear();
+            //下面先补充前导0
+            while (--front_point_Size)
+            {
+                return_float.back_point.emplace_front(0);
+            }
+            return_float.back_point.insert(return_float.back_point.end(), temp.begin(), temp.end());
+        }
+        //商有多的大数部分
+        else if (back_point_size)
+        {
+            back_point_size = return_float.front_point.size() - back_point_size;
+            std::deque<char> temp_e(return_float.front_point.begin() + back_point_size, return_float.front_point.end());
+            std::deque<char> temp_f(return_float.front_point.begin(), return_float.front_point.begin() + back_point_size);
+            return_float.front_point.clear();
+            return_float.back_point.clear();
+            return_float.front_point.insert(return_float.front_point.end(), temp_f.begin(), temp_f.end());
+            return_float.back_point.insert(return_float.back_point.end(), temp_e.begin(), temp_e.end());
+        }
+
+        return_float.sign = ((num1.sign and num2.sign) or (!num1.sign and !num2.sign));
         return_float.trim();
         return return_float;
+    }
+
+    high_float operator%(const high_float &num1, int num2_int)
+    {
+        high_float num2(num2_int);
+        if (num1.abs() < num2.abs())
+        {
+            return num1;
+        }
+        if (num2 == HFLOAT_ZERO)
+        {
+            throw std::logic_error("除数为0");
+        }
+        if (num2 == HFLOAT_ONE)
+        {
+            return HFLOAT_ZERO;
+        }
+        high_float temp_num1 = num1;
+        high_float temp_num2 = num2;
+        //转换成无符号除法来做
+        temp_num1.sign = true;
+        temp_num2.sign = true;
+        //把除数和被除数变成整数
+        if (temp_num2.back_point.size() > 1 or ((temp_num2.back_point.size() == 1) and (*(temp_num2.back_point.begin()) != 0)))
+        {
+            //有小数部分就把除数和乘数同时扩大，直到除数为整数
+            int t = std::max(temp_num2.back_point.size(), temp_num1.back_point.size());
+            while (t--)
+            {
+                temp_num1 = temp_num1 * HFLOAT_TEN;
+                temp_num2 = temp_num2 * HFLOAT_TEN;
+            }
+        }
+        //试商的被除数
+        high_float compare;
+        //试商的除数
+        high_float divisor;
+        //构造第一次试商的被除数
+        decltype(compare.front_point) temp;
+        auto it_num1 = temp_num1.front_point.begin();
+        it_num1 += temp_num2.front_point.size();
+        temp.insert(temp.begin(), temp_num1.front_point.begin(), it_num1);
+        compare.front_point.swap(temp);
+        //试商
+        while (true)
+        {
+            if (compare < temp_num2)
+            {
+                //如果被除数更小,乘10
+                if (it_num1 != temp_num1.front_point.end())
+                {
+                    compare.front_point.emplace_back(*it_num1);
+                    compare.trim();
+                    it_num1++;
+                }
+                //如果原数字使用完则证明结束
+                else
+                {
+                    break;
+                }
+            }
+            int i;
+            for (i = 1; i <= 10; i++)
+            {
+                high_float BF(i);
+                divisor = temp_num2 * BF;
+                if (divisor > compare)
+                    break;
+            }
+            //真正的除数
+            divisor -= temp_num2;
+            //本次试商除完的被除数
+            compare -= divisor;
+        }
+        return compare;
     }
 
     //输入输出重载
@@ -647,15 +727,16 @@ namespace swq
 
         for (auto iter = num.front_point.begin(); iter != num.front_point.end(); iter++) // 输出整数部分
         {
-            out << (char)((*iter) + '0');
+            out << (int)((*iter));
         }
 
         out << '.';
 
         for (auto iter = num.back_point.begin(); iter != num.back_point.end(); iter++) // 输出小数部分
         {
-            out << (char)((*iter) + '0');
+            out << (int)((*iter));
         }
+
         return out;
     }
 
@@ -673,8 +754,8 @@ using namespace swq;
 high_float::high_float()
 {
     sign = true;
-    front_point.push_back(0);
-    back_point.push_back(0);
+    front_point.emplace_back(0);
+    back_point.emplace_back(0);
 }
 
 high_float::high_float(int input_num)
@@ -686,12 +767,12 @@ high_float::high_float(int input_num)
     input_num = std::abs(input_num);
     do
     {
-        //按位倒序写入整数部分
-        front_point.push_back((char)(input_num % 10));
+        //按位正序写入整数部分
+        front_point.emplace_front((char)(input_num % 10));
         input_num /= 10;
     } while (input_num != 0);
-    //小数部分写0
-    back_point.push_back(0);
+    //去除多余的0
+    trim();
 }
 
 high_float::high_float(double input_num)
@@ -703,7 +784,6 @@ high_float::high_float(const std::string &input_num)
 {
     //用于判断小数与整数部分交界
     bool type = input_num.find('.') == std::string::npos ? false : true;
-
     //默认为正数，读到'-'再变为负数
     sign = true;
 
@@ -727,10 +807,13 @@ high_float::high_float(const std::string &input_num)
         }
         //写入时将字符串转换为数字存储
         if (type)
-            front_point.push_back((char)((*iter) - '0'));
+            front_point.emplace_back((char)((*iter) - '0'));
         else
-            back_point.push_back((char)((*iter) - '0'));
+            back_point.emplace_back((char)((*iter) - '0'));
     }
+
+    //去除多余的0
+    trim();
 }
 
 high_float::high_float(const char *input_num)
@@ -786,6 +869,33 @@ high_float high_float::abs() const
         return -(*this);
 }
 
+//开根号 使用二分法逼近
+high_float high_float::square_root() const
+{
+    high_float min, max, mid;
+    high_float self((*this));
+    min = 0;
+    if (self <= HFLOAT_ONE)
+    {
+        self = 1;
+    }
+    max = self;
+    mid = self / HFLOAT_TWO;
+    while (mid * mid > self + PRECISION || mid * mid < self - PRECISION)
+    {
+        mid = (max + min) / HFLOAT_TWO;
+        if (mid * mid < self + PRECISION)
+        {
+            min = mid; //根值偏小，升高下边界
+        };
+        if (mid * mid > self - PRECISION)
+        {
+            max = mid; //根值偏大，降低上边界
+        }
+    }
+    return mid;
+}
+
 bool high_float::empty() const
 {
     return front_point.empty() and back_point.empty();
@@ -829,7 +939,7 @@ void high_float::trim()
     //如果整数部分是0
     if (front_point.size() == 0)
     {
-        front_point.push_back(0);
+        front_point.emplace_back(0);
     }
     else
     {
@@ -837,15 +947,19 @@ void high_float::trim()
         //对整数部分从头遍历，直到没有0为止
         while (!front_point.empty() and (*iter) == 0)
         {
-            iter++;
+            //删除开头的全部0
+            front_point.erase(iter);
+            iter = front_point.begin();
         }
-        //删除开头的全部0
-        front_point.erase(front_point.begin(), iter);
+        if (front_point.empty())
+        {
+            front_point.emplace_back(0);
+        }
     }
     //如果小数部分是0
     if (back_point.size() == 0)
     {
-        back_point.push_back(0);
+        back_point.emplace_back(0);
     }
     else
     {
@@ -856,6 +970,10 @@ void high_float::trim()
             //小数部分只有结尾有0，如果有0直接删除即可
             back_point.pop_back();
             it = back_point.rbegin();
+        }
+        if (back_point.empty())
+        {
+            back_point.emplace_back(0);
         }
     }
 }

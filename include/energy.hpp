@@ -10,6 +10,7 @@
 
 #include "openvino/openvino.hpp"
 
+#include "high_num.hpp"
 #include "json.hpp"
 #include "debug.hpp"
 

@@ -347,9 +347,9 @@ int main()
         serial_com.send_msg(msg);
     }
 #endif
-    swq::high_float temp(1234.0);
-    swq::high_float temp2(2.0000);
-    temp = temp / temp2;
+    swq::high_float temp = "1234.000034501";
+    swq::high_float temp2 = "2.00034509067245890672836701";
+    temp = temp * temp2;
     log_debug(temp);
     log_debug("主线程结束");
     return 0;
