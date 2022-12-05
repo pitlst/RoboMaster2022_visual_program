@@ -63,7 +63,6 @@ void GetEnergyMac::load_json()
     load_energy.clear();
     load_camera.clear();
 
-
     //高精度整数计算量较大,提前计算好
     nms_limit = high_float(energy_par.nms_distence_max * energy_par.frame_size);
     nms_limit = nms_limit * nms_limit;
@@ -295,10 +294,17 @@ void GetEnergyMac::center_filter(buffer_para &buffer)
 
 #endif
 #ifdef CENTER_FILTER_WEIGHTED
-        std::vector<double> average_center;
+        std::vector<high_float> average_center;
         if (label)
         {
-            average_center = temp_buffer.center;
+            average_center.resize(temp_buffer.center.size());
+            average_center[0] = buffer.center[0];
+            average_center[1] = buffer.center[1];
+            average_center[2] = buffer.center[2];
+            average_center[3] = buffer.center[3];
+            average_center[4] = buffer.center[4];
+            average_center[5] = buffer.center[5];
+            average_center[6] = buffer.center[6];
             //类别不变
             //长宽坐标计算为置信度加权平均
             average_center[2] = average_center[2] * average_center[0];
@@ -329,9 +335,15 @@ void GetEnergyMac::center_filter(buffer_para &buffer)
         average_center[4] = average_center[4] / average_center[0];
         average_center[5] = average_center[5] / average_center[0];
 
-        average_center[0] = average_center[0] / temp_center.size();
-        //如果可以这里的计算都应转换为大整数计算
-        buffer.center = average_center;
+        average_center[0] = average_center[0] / high_float((double)temp_center.size());
+
+        buffer.center[0] = average_center[0];
+        buffer.center[1] = average_center[1];
+        buffer.center[2] = average_center[2];
+        buffer.center[3] = average_center[3];
+        buffer.center[4] = average_center[4];
+        buffer.center[5] = average_center[5];
+        buffer.center[6] = average_center[6];
 #endif
     }
     //校验是否为空

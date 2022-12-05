@@ -58,9 +58,9 @@
 //这是模型的类别置信度阈值
 #define CLASSES_THRESHOLD 0.05
 //开启此开关,旋转中心的筛选方式设为交并比
-#define CENTER_FILTER_IOU 
+// #define CENTER_FILTER_IOU 
 //开启此开关,旋转中心的筛选方式设为加权平均
-// #define CENTER_FILTER_WEIGHTED
+#define CENTER_FILTER_WEIGHTED
 
 //大符预测的最大历史记录次数
 #define BUFFER_HISTORY_LEN_MAX 300
