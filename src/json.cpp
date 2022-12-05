@@ -41,10 +41,8 @@ json::json(const std::string &input_v)
     m_value.m_string = new std::string(input_v);
 }
 
-json::json(const json &input_j)
+json::json(const json &input_j) :m_type(input_j.m_type) ,m_value(input_j.m_value)
 {
-    m_type = input_j.m_type;
-    m_value = input_j.m_value;
 }
 
 json::json(type input_t)
@@ -654,19 +652,14 @@ void json::parse(const std::string & str)
 
 parser_j::parser_j()
 {
-    m_str = "";
-    m_idx = 0;
 }
-parser_j::parser_j(const std::string & str)
+parser_j::parser_j(const std::string & str) : m_str(str)
 {
-    m_str = str;
-    m_idx = 0;
 }
 
 void parser_j::load(const std::string & str)
 {
     m_str = str;
-    m_idx = 0;
 }
 
 char parser_j::get_next_token()
@@ -680,7 +673,7 @@ char parser_j::get_next_token()
         if (m_idx == m_str.size())
         {
             end_label = true;
-            return m_str[-1];
+            return m_str[m_str.size()-1];
         }
         else
         {
@@ -689,7 +682,7 @@ char parser_j::get_next_token()
     }
     else
     {
-        return m_str[-1];
+        return m_str[m_str.size()-1];
     }
 
 }

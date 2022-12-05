@@ -36,7 +36,6 @@ TOE实验室算法组---打符/自瞄程序C++版
 #include "utils.hpp"
 #include "json.hpp"
 #include "logger.hpp"
-#include "xml.hpp"
 #include "serial.hpp"
 #include "debug.hpp"
 #include "high_num.hpp"
@@ -118,8 +117,8 @@ void frame_th()
 void process_th()
 {
     cv::Mat frame;
-    double time;
-    int k;
+    double time = 0;
+    int k = 0;
     std::vector<int> msg = {-1, -1, -1};
     cv::namedWindow("调参窗口aimbot_1");
     cv::namedWindow("调参窗口aimbot_2");

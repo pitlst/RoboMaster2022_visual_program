@@ -131,8 +131,8 @@ namespace swq
         json parse_array();
         json parse_object();
 
-        std::string m_str;
-        size_t m_idx;
+        std::string m_str = "";
+        size_t m_idx = 0;
         bool end_label = false;
     };
 

@@ -30,11 +30,11 @@ namespace swq
         Serial operator &(const Serial&) = delete;
 
         //串口设备描述符
-        int fd;
+        int fd = 0;
         //串口接受数据的缓冲区
-        unsigned char rbuff[10];
+        unsigned char rbuff[10] = {};
         //串口发送数据的缓冲区
-        unsigned char sbuff[3];
+        unsigned char sbuff[3] = {};
         //记录的模式信息
         int mode = DEFALUTE_MODE;
         //记录的颜色信息

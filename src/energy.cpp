@@ -529,11 +529,11 @@ void GetEnergyMac::judge_rotate_direct()
     }
     else if (armor.size() > 3)
     {
-        auto angle_1 = atan2(armor[-1].armor_point[0], armor[-1].armor_point[1]);
-        auto angle_2 = atan2(armor[-2].armor_point[0], armor[-2].armor_point[1]);
+        auto angle_1 = atan2(armor[armor.size()-1].armor_point[0], armor[armor.size()-1].armor_point[1]);
+        auto angle_2 = atan2(armor[armor.size()-2].armor_point[0], armor[armor.size()-2].armor_point[1]);
         auto delta_angle = abs((angle_1 - angle_2) * 180.0f / PI);
         //如果角度差不准，再添加最大值过滤
-        armor[-1].delta_angle = delta_angle;
+        armor[armor.size()-1].delta_angle = delta_angle;
 
         decltype(delta_angle) temp_angle;
         for (const auto &ch : armor)
@@ -600,12 +600,12 @@ double GetEnergyMac::energymac_forecast_small(double angle)
 
 double GetEnergyMac::energymac_forecast_big(double angle)
 {
-    auto angle_1 = atan2(armor[-1].armor_point[0], armor[-1].armor_point[1]);
-    auto angle_2 = atan2(armor[-2].armor_point[0], armor[-2].armor_point[1]);
+    auto angle_1 = atan2(armor[armor.size()-1].armor_point[0], armor[armor.size()-1].armor_point[1]);
+    auto angle_2 = atan2(armor[armor.size()-2].armor_point[0], armor[armor.size()-2].armor_point[1]);
     auto delta_angle = abs((angle_1 - angle_2) * 180.0f / PI);
-    auto delta_time = armor[-1].f_time - armor[-2].f_time;
+    auto delta_time = armor[armor.size()-1].f_time - armor[armor.size()-2].f_time;
     auto temp_angel_speed = delta_angle / delta_time;
-    auto f_time = armor[-1].f_time;
+    auto f_time = armor[armor.size()-1].f_time;
 
     measurement.at<double>(0) = temp_angel_speed;
     measurement.at<double>(0) = f_time;

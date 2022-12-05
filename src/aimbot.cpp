@@ -141,15 +141,15 @@ void GetArmor::GetLightBar()
                 auto rectProp = rotate.size.width / rotate.size.height;
                 auto rectArea = rotate.size.width * rotate.size.height;
                 auto angleHori = abs(int(rotate.angle) % 180);
-                if (angleHori > load_par.minAngleError AND angleHori < load_par.maxAngleError)
+                if (angleHori < load_par.minAngleError OR angleHori > load_par.maxAngleError)
                 {
                     continue;
                 }
-                else if (rectProp < load_par.minlighterProp AND rectProp > load_par.maxlighterProp)
+                else if (rectProp < load_par.minlighterProp OR rectProp > load_par.maxlighterProp)
                 {
                     continue;
                 }
-                else if (rectArea < load_par.maxlighterarea AND rectArea > load_par.maxlighterarea)
+                else if (rectArea < load_par.minlighterarea OR rectArea > load_par.maxlighterarea)
                 {
                     continue;
                 }

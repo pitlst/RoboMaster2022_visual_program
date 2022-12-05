@@ -839,11 +839,8 @@ high_float::high_float(const char *input_num)
     *this = high_float(std::string(input_num));
 }
 
-high_float::high_float(const high_float &input_num)
+high_float::high_float(const high_float &input_num) : front_point(input_num.front_point), back_point(input_num.back_point), sign(input_num.sign)
 {
-    front_point = input_num.front_point;
-    back_point = input_num.back_point;
-    sign = input_num.sign;
 }
 
 high_float::high_float(high_float &&input_num) noexcept

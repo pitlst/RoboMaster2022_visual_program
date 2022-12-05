@@ -106,9 +106,9 @@ namespace swq
         //用于判断正负的标志位,true为非负,false为负
         bool sign = true;
         //小数点前的每一位
-        std::deque<char> front_point;
+        std::deque<char> front_point = {0};
         //小数点后的每一位
-        std::deque<char> back_point;
+        std::deque<char> back_point = {0};
     };
 
 #define HFLOAT_ZERO high_float::ZERO()
