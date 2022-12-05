@@ -23,6 +23,8 @@
 //相机输入源路径
 // #define PATH_CAPTURE "HIVISION"
 #define PATH_CAPTURE "../asset/test2.avi"
+//录像保存路径
+#define PATH_VIDEOWRITER "../asset/video/"
 //能量机关模式参数-小符
 #define SMALL_ENERGY_BUFFER 1
 //能量机关模式参数-大符
@@ -58,9 +60,9 @@
 //这是模型的类别置信度阈值
 #define CLASSES_THRESHOLD 0.05
 //开启此开关,旋转中心的筛选方式设为交并比
-// #define CENTER_FILTER_IOU 
+#define CENTER_FILTER_IOU 
 //开启此开关,旋转中心的筛选方式设为加权平均
-#define CENTER_FILTER_WEIGHTED
+// #define CENTER_FILTER_WEIGHTED
 
 //大符预测的最大历史记录次数
 #define BUFFER_HISTORY_LEN_MAX 300
@@ -116,3 +118,6 @@
 #ifdef CENTER_FILTER_IOU
 #undef CENTER_FILTER_WEIGHTED
 #endif
+
+#define AND &&
+#define OR ||

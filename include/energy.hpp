@@ -117,16 +117,16 @@ namespace swq
         void vector_protect_process();
 
         //阻止构造一些常用的特定重载函数
-        GetEnergyMac operator <<(const GetEnergyMac&) = delete;
-        GetEnergyMac operator >>(const GetEnergyMac&) = delete;
-        GetEnergyMac operator =(const GetEnergyMac&) = delete;
-        GetEnergyMac operator +(const GetEnergyMac&) = delete;
-        GetEnergyMac operator -(const GetEnergyMac&) = delete;
-        GetEnergyMac operator *(const GetEnergyMac&) = delete;
-        GetEnergyMac operator /(const GetEnergyMac&) = delete;
-        GetEnergyMac operator ++() = delete;
-        GetEnergyMac operator --() = delete;
-        GetEnergyMac operator &(const GetEnergyMac&) = delete;
+        void  operator <<(const GetEnergyMac&) = delete;
+        void  operator >>(const GetEnergyMac&) = delete;
+        void  operator =(const GetEnergyMac&) = delete;
+        void  operator +(const GetEnergyMac&) = delete;
+        void  operator -(const GetEnergyMac&) = delete;
+        void  operator *(const GetEnergyMac&) = delete;
+        void  operator /(const GetEnergyMac&) = delete;
+        void  operator ++() = delete;
+        void  operator --() = delete;
+        void  operator &(const GetEnergyMac&) = delete;
 
         //检测的开始时间
         double begin_time = 0;
@@ -135,7 +135,7 @@ namespace swq
         //能量机关的旋转方向,-1顺时针,1逆时针
         int detect = 0;
         //能量机关的半径
-        double hitDis;
+        double hitDis = 0;
         //处理的图像
         cv::Mat frame;
         //指向处理图像的指针

@@ -54,6 +54,25 @@ add_executable(${PROJECT_NAME} ${DIR_SRCS} ${M_INCLUDES} ${3rd_INCLUDE})
 # 链接动态库
 target_link_libraries(${PROJECT_NAME} PRIVATE pthread ${OpenCV_LIBS} ${3rd_LIBS} openvino::runtime)
 
+# cppcheck可以使用cmake文件生成的compile_commands.json，其通过命令行参数指定
+# 由于实测compile_commands.json是在CMAKE_CACHEFILE_DIR目录下生成，由此有下面的代码
+find_program(CPPCHECK_PROC NAMES cppcheck)
+if (CPPCHECK_PROC)
+  list(
+    APPEND CPPCHECK_CONFIG
+    "--enable=warning,performance,information"
+    "--project=${CMAKE_BINARY_DIR}/compile_commands.json"
+    "--suppress=missingIncludeSystem"
+    "--language=c++"
+    "--std=c++11"
+    "--max-ctu-depth=10"
+    "-j 4"
+    "--output-file=${CMAKE_BINARY_DIR}/cppcheck_report.txt"
+    )
+    add_custom_target(cppcheck_code_check)
+    add_custom_command(TARGET cppcheck_code_check COMMAND ${CPPCHECK_PROC} ${CPPCHECK_CONFIG})
+endif ()
+
 if("${CMAKE_BUILD_TYPE}" MATCHES "Debug")
 # >>>>>>>>测试部分:仅当在debug下启用并生成>>>>>>>>
     set(CTEST_OUTPUT_ON_FAILURE TRUE)

@@ -94,12 +94,12 @@ void frame_th()
             img_mtx.unlock();
             continue;
         }
+        
         auto frame = capture.GetOneFrame();
         img_queue.push(frame);
         time_queue.push(time.count() / TIME_TRANSFORMER);
         img_mtx.unlock();
 
-        
         count++;
         //每发送10次校验一下输入的模式和颜色
         if (count > 10)
@@ -111,11 +111,6 @@ void frame_th()
                 mode_temp = mode;
             }
         }
-        //保存录像
-#ifdef SAVE_VIDEO
-
-#endif
-
     }
 }
 
@@ -138,10 +133,11 @@ void process_th()
     //创建滑动条
     swq::bar_creat_aimbot(bar_aimbot_global);
     swq::bar_creat_bufferr(bar_buffer_global);
+    
     while (1)
     {
         //线程退出
-        if (k == 27 or flag == 1)
+        if (k == 27 OR return_flag)
         {
             cv::destroyAllWindows();
             flag = 1;
@@ -162,6 +158,7 @@ void process_th()
         
         if (mode == 0)
         {
+            
             msg = aimbot.process(frame);
             auto debug_frame = aimbot.debug_frame(frame);
             aimbot.updata_argument(trans_bar_to_para(bar_aimbot_global));
@@ -169,23 +166,23 @@ void process_th()
             cv::imshow("frame_debug", debug_frame.front());
             cv::imshow("mask_debug", debug_frame.back());
         }
-        else if (mode == 1 or mode == 2)
+        else if (mode == 1 OR mode == 2)
         {
             buffer.set(mode);
             auto frame_temp = frame.clone();
             msg = buffer.process(frame, time);
-            //log_debug("msg is :", msg[0], " ", msg[1], " ", msg[2]);
-            buffer.updata_argument(trans_bar_to_para(bar_buffer_global));
-            auto debug_frame = buffer.debug_frame(frame_temp);
+            log_debug("msg is :", msg[0], " ", msg[1], " ", msg[2]);
+            // buffer.updata_argument(trans_bar_to_para(bar_buffer_global));
+            // auto debug_frame = buffer.debug_frame(frame_temp);
             //buffer.update_json(PATH_ENERGY_JSON);
-            cv::imshow("frame_debug", debug_frame.front());
+            // cv::imshow("frame_debug", debug_frame.front());
         }
         else
         {
             msg = std::vector<int>{-1, -1, -1};
         }
         img_mtx.unlock();
-
+        
         msg_mtx.lock();
         msg_queue.push(msg);
         msg_mtx.unlock();
@@ -225,7 +222,7 @@ void process_th()
         {
             msg = aimbot.process(frame);
         }
-        else if (mode == 1 or mode == 2)
+        else if (mode == 1 OR mode == 2)
         {
             buffer.set(mode);
             msg = buffer.process(frame, time);
@@ -336,7 +333,7 @@ int main()
         {
             msg = aimbot.process(frame);
         }
-        else if (mode == 1 or mode == 2)
+        else if (mode == 1 OR mode == 2)
         {
             msg = buffer.process(frame, time);
         }

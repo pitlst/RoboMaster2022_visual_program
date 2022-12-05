@@ -78,6 +78,20 @@ namespace swq
         void load_json();
         std::vector<int> process(cv::Mat &input_frame);
 
+        //阻止构造一些常用的特定重载函数
+        GetArmor(const GetArmor&) = delete;
+        void  operator <<(const GetArmor&) = delete;
+        void  operator >>(const GetArmor&) = delete;
+        void  operator =(const GetArmor&) = delete;
+        void  operator =(GetArmor&&) = delete;
+        void  operator +(const GetArmor&) = delete;
+        void  operator -(const GetArmor&) = delete;
+        void  operator *(const GetArmor&) = delete;
+        void  operator /(const GetArmor&) = delete;
+        void  operator ++() = delete;
+        void  operator --() = delete;
+        void  operator &(const GetArmor&) = delete;
+        
 #ifdef COMPILE_DEBUG
         // debug下用于返回图像
         std::list<cv::Mat> debug_frame(cv::Mat &input_frame);
@@ -99,23 +113,11 @@ namespace swq
         //单目测距
         float GetArmorDistance(float s0, float s1);
 
-        //阻止构造一些常用的特定重载函数
-        GetArmor operator <<(const GetArmor&) = delete;
-        GetArmor operator >>(const GetArmor&) = delete;
-        GetArmor operator =(const GetArmor&) = delete;
-        GetArmor operator +(const GetArmor&) = delete;
-        GetArmor operator -(const GetArmor&) = delete;
-        GetArmor operator *(const GetArmor&) = delete;
-        GetArmor operator /(const GetArmor&) = delete;
-        GetArmor operator ++() = delete;
-        GetArmor operator --() = delete;
-        GetArmor operator &(const GetArmor&) = delete;
-
         int start_label = 0;
         bool color = DEFALUTE_COLOR;
         //图像中心像素数
-        int img_xCenter;
-        int img_yCenter;
+        int img_xCenter = 0;
+        int img_yCenter = 0;
         //处理的图像
         cv::Mat frame;
         cv::Mat mask;
@@ -123,7 +125,7 @@ namespace swq
         std::vector<cv::RotatedRect> *lightBarList;
         //存储装甲板
         std::vector<std::vector<float>> *realCenter_list;
-        armor_final armor;
-        fiter_para load_par;
+        armor_final armor = {0};
+        fiter_para load_par = {0};
     };
 }

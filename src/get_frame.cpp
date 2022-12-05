@@ -1,4 +1,5 @@
 #include "get_frame.hpp"
+#include "logger.hpp"
 #include "debug.hpp"
 
 using namespace swq;
@@ -28,6 +29,9 @@ GetFrame::GetFrame(const std::string &source_path, int input_mode)
     source = source_path;
     read_json(PATH_CAMERA_JSON);
     StartCamera();
+#ifdef SAVE_VIDEO
+    video_init();
+#endif
 }
 
 GetFrame::~GetFrame()
@@ -36,6 +40,10 @@ GetFrame::~GetFrame()
     frame.release();
     capture.release();
     file.clear();
+#ifdef SAVE_VIDEO
+    writer_aimbot.release();
+    writer_buffer.release();
+#endif
 }
 
 void GetFrame::set(const std::string &source_path, int input_mode)
@@ -90,7 +98,7 @@ void GetFrame::read_json(const std::string &input_filename)
         m_camera.offsetX = file["Aimbot"]["offsetX"];
         m_camera.offsetY = file["Aimbot"]["offsetY"];
     }
-    else if (mode == 1 or mode == 2)
+    else if (mode == 1 OR mode == 2)
     {
         m_camera.width = file["Energy_mac"]["width"];
         m_camera.height = file["Energy_mac"]["height"];
@@ -373,7 +381,7 @@ cv::Mat &GetFrame::GetOneFrame()
 {
     if (open_label)
     {
-        if (video_debug_set == 1 or video_debug_set == 2)
+        if (video_debug_set == 1 OR video_debug_set == 2)
         {
             auto ret = capture.read(frame);
             if (ret == false)
@@ -400,6 +408,9 @@ cv::Mat &GetFrame::GetOneFrame()
     {
         log_error("错误,未开启相机,返回值为默认图像");
     }
+#ifdef SAVE_VIDEO
+    video_writer(frame);
+#endif
     return frame;
 }
 
@@ -493,7 +504,7 @@ void GetFrame::EndCamera()
 {
     if (open_label)
     {
-        if (video_debug_set == 1 or video_debug_set == 2)
+        if (video_debug_set == 1 OR video_debug_set == 2)
         {
             capture.release();
         }
@@ -541,4 +552,47 @@ int GetFrame::get_video_debug()
     return video_debug_set;
 }
 
+#endif
+
+#ifdef SAVE_VIDEO
+
+void GetFrame::video_init()
+{
+
+    //构造保存的视频名称
+    time_t rawtime = std::chrono::system_clock::to_time_t(std::chrono::high_resolution_clock::now());
+    struct tm *ptminfo = localtime(&rawtime);
+    std::stringstream ss;
+    ss << ptminfo->tm_year + 1900;
+    ss << "-";
+    ss << ptminfo->tm_mon + 1;
+    ss << "-";
+    ss << ptminfo->tm_mday;
+    ss << " ";
+    ss << ptminfo->tm_hour;
+    ss << ":";
+    ss << ptminfo->tm_min;
+    ss << ":";
+    ss << ptminfo->tm_sec;
+    ss << ":";
+    std::stringstream ss_aimbot;
+    std::stringstream ss_buffer;
+    int codec = cv::VideoWriter::fourcc('X', 'V', 'I', 'D');
+    ss_aimbot << ss.str() << "aimbot";
+    writer_aimbot.open(PATH_VIDEOWRITER + ss_aimbot.str(), codec, 10, cv::Size(file["Aimbot"]["width"], file["Aimbot"]["height"]), true);
+    ss_buffer << ss.str() << "buffer";
+    writer_buffer.open(PATH_VIDEOWRITER + ss_buffer.str(), codec, 10, cv::Size(file["Energy_mac"]["width"], file["Energy_mac"]["height"]), true);
+}
+
+void GetFrame::video_writer(cv::Mat frame)
+{
+    if (mode == 0)
+    {
+        writer_aimbot.write(frame.clone());
+    }
+    else
+    {
+        writer_buffer.write(frame.clone());
+    }
+}
 #endif

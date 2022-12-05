@@ -55,7 +55,7 @@ bool swq::is_Numeric(std::string str)
 {
     for (auto &ch : str)
     {
-        if (ch < '0' or ch > '9')
+        if (ch < '0' OR ch > '9')
         {
             return false;
         }

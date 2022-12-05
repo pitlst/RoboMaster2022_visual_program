@@ -134,22 +134,22 @@ void GetArmor::GetLightBar()
             if (ch.size() > 5)
             {
                 cv::RotatedRect rotate = cv::fitEllipse(ch);
-                if (rotate.size.height <= 0 or rotate.size.width <= 0)
+                if (rotate.size.height <= 0 OR rotate.size.width <= 0)
                 {
                     continue;
                 }
                 auto rectProp = rotate.size.width / rotate.size.height;
                 auto rectArea = rotate.size.width * rotate.size.height;
                 auto angleHori = abs(int(rotate.angle) % 180);
-                if (angleHori > load_par.minAngleError and angleHori < load_par.maxAngleError)
+                if (angleHori > load_par.minAngleError AND angleHori < load_par.maxAngleError)
                 {
                     continue;
                 }
-                else if (rectProp < load_par.minlighterProp and rectProp > load_par.maxlighterProp)
+                else if (rectProp < load_par.minlighterProp AND rectProp > load_par.maxlighterProp)
                 {
                     continue;
                 }
-                else if (rectArea < load_par.maxlighterarea and rectArea > load_par.maxlighterarea)
+                else if (rectArea < load_par.maxlighterarea AND rectArea > load_par.maxlighterarea)
                 {
                     continue;
                 }
@@ -212,22 +212,22 @@ void GetArmor::CombineLightBar_ground()
                 angle = -angle * 180 / M_PI;
             }
             //灯条长长过大过小不要
-            if (arealongRatio < load_par.minarealongRatio or arealongRatio > load_par.maxarealongRatio)
+            if (arealongRatio < load_par.minarealongRatio OR arealongRatio > load_par.maxarealongRatio)
             {
                 continue;
             }
             //灯条宽宽比过大过小不要
-            if (areawidthRatio < load_par.minareawidthRatio or areawidthRatio > load_par.maxareawidthRatio)
+            if (areawidthRatio < load_par.minareawidthRatio OR areawidthRatio > load_par.maxareawidthRatio)
             {
                 continue;
             }
             //灯条角度差过大不要
-            if ((angleDiff_caculate > angleDiff and angleDiff_caculate < 180 - angleDiff) or (angleDiff_caculate > 90 and angleDiff_caculate < 180 - yixaingangleDiff))
+            if ((angleDiff_caculate > angleDiff AND angleDiff_caculate < 180 - angleDiff) OR (angleDiff_caculate > 90 AND angleDiff_caculate < 180 - yixaingangleDiff))
             {
                 continue;
             }
             //灯条面积比太大不要
-            if (areaRatio > load_par.maxareaRatio or areaRatio < load_par.minareaRatio)
+            if (areaRatio > load_par.maxareaRatio OR areaRatio < load_par.minareaRatio)
             {
                 continue;
             }
@@ -252,7 +252,7 @@ void GetArmor::CombineLightBar_ground()
                 continue;
             }
             //装甲板面积太大或太小不要
-            if (armorArea < load_par.minarmorArea or armorArea > load_par.maxarmorArea)
+            if (armorArea < load_par.minarmorArea OR armorArea > load_par.maxarmorArea)
             {
                 continue;
             }
@@ -262,7 +262,7 @@ void GetArmor::CombineLightBar_ground()
                 continue;
             }
             //装甲板长宽比太大或太小不要
-            if ((armorProp < load_par.minarmorProp or armorProp > load_par.maxarmorProp) and (armorProp < load_par.minBigarmorProp or armorProp > load_par.maxBigarmorProp))
+            if ((armorProp < load_par.minarmorProp OR armorProp > load_par.maxarmorProp) AND (armorProp < load_par.minBigarmorProp OR armorProp > load_par.maxBigarmorProp))
             {
                 continue;
             }
@@ -276,7 +276,7 @@ void GetArmor::CombineLightBar_ground()
             for (auto &realCenter : *realCenter_list)
             {
                 auto armor_imgcenter_distence = (double)EuclideanDistance(realCenter[0], realCenter[1], img_xCenter, img_yCenter);
-                if (temp_distence > armor_imgcenter_distence or temp_distence == -1)
+                if (temp_distence > armor_imgcenter_distence OR temp_distence == -1)
                     temp_distence = armor_imgcenter_distence;
                 x = realCenter[0];
                 y = realCenter[1];

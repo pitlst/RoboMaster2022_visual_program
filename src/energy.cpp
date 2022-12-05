@@ -249,19 +249,19 @@ void GetEnergyMac::center_filter(buffer_para &buffer)
         else
         {
             //计算上一次中心的框
-            high_float last_x00 = temp_buffer.center[2] - temp_buffer.center[4] / 2;
-            high_float last_y00 = temp_buffer.center[3] - temp_buffer.center[5] / 2;
-            high_float last_x11 = temp_buffer.center[2] + temp_buffer.center[4] / 2;
-            high_float last_y11 = temp_buffer.center[3] + temp_buffer.center[5] / 2;
+            auto last_x00 = high_float(temp_buffer.center[2]) - high_float(temp_buffer.center[4]) / HFLOAT_TWO;
+            auto last_y00 = high_float(temp_buffer.center[3]) - high_float(temp_buffer.center[5]) / HFLOAT_TWO;
+            auto last_x11 = high_float(temp_buffer.center[2]) + high_float(temp_buffer.center[4]) / HFLOAT_TWO;
+            auto last_y11 = high_float(temp_buffer.center[3]) + high_float(temp_buffer.center[5]) / HFLOAT_TWO;
 
             high_float last_iou;
             for (auto &ch : temp_center)
             {
                 //计算中心的框
-                high_float m_x00 = ch[2] - ch[4] / 2;
-                high_float m_y00 = ch[3] - ch[5] / 2;
-                high_float m_x11 = ch[2] + ch[4] / 2;
-                high_float m_y11 = ch[3] + ch[5] / 2;
+                auto m_x00 = high_float(ch[2]) - high_float(ch[4]) / HFLOAT_TWO;
+                auto m_y00 = high_float(ch[3]) - high_float(ch[5]) / HFLOAT_TWO;
+                auto m_x11 = high_float(ch[2]) + high_float(ch[4]) / HFLOAT_TWO;
+                auto m_y11 = high_float(ch[3]) + high_float(ch[5]) / HFLOAT_TWO;
 
                 //计算并集面积
                 auto x00 = min(last_x00, m_x00);
@@ -438,7 +438,7 @@ void GetEnergyMac::energy_filter(buffer_para &buffer)
         {
             auto distance = EuclideanDistance(buffer.center[2], buffer.center[3], ch[2], ch[3]);
             //装甲板与旋转中心距离超过阈值直接跳过
-            if (distance < armor_R_limit_min or distance > armor_R_limit_max)
+            if (distance < armor_R_limit_min OR distance > armor_R_limit_max)
             {
                 continue;
             }
@@ -446,7 +446,7 @@ void GetEnergyMac::energy_filter(buffer_para &buffer)
             {
                 auto _distance = EuclideanDistance(_ch[2], _ch[3], ch[2], ch[3]);
                 //判断装甲板与大符中心的距离，用于判断装甲板是否被击中
-                if (_distance > fan_armor_limit_min and _distance < fan_armor_limit_max)
+                if (_distance > fan_armor_limit_min AND _distance < fan_armor_limit_max)
                 {
                     //不符合要求
                     pos_true = false;
@@ -557,35 +557,35 @@ double GetEnergyMac::cartesian_to_polar(buffer_para &buffer)
     auto vectorx = buffer.armor_point[0] - buffer.center[2];
     auto vectory = buffer.armor_point[1] - buffer.center[3];
     double angle = -1;
-    if (vectorx > 0 and vectory > 0)
+    if (vectorx > 0 AND vectory > 0)
     {
         angle = std::atan(std::abs(vectory / vectorx)) * 180 / PI;
     }
-    else if (vectorx < 0 and vectory > 0)
+    else if (vectorx < 0 AND vectory > 0)
     {
         angle = 180.0f - std::atan(std::abs(vectory / vectorx)) * 180 / PI;
     }
-    else if (vectorx < 0 and vectory < 0)
+    else if (vectorx < 0 AND vectory < 0)
     {
         angle = 180.0f + std::atan(std::abs(vectory / vectorx)) * 180 / PI;
     }
-    else if (vectorx > 0 and vectory < 0)
+    else if (vectorx > 0 AND vectory < 0)
     {
         angle = 360.0f - std::atan(std::abs(vectory / vectorx)) * 180 / PI;
     }
-    else if (vectorx == 0 and vectory > 0)
+    else if (vectorx == 0 AND vectory > 0)
     {
         angle = 270.0f;
     }
-    else if (vectorx == 0 and vectory <= 0)
+    else if (vectorx == 0 AND vectory <= 0)
     {
         angle = 90.0f;
     }
-    else if (vectory == 0 and vectorx > 0)
+    else if (vectory == 0 AND vectorx > 0)
     {
         angle = 0.0f;
     }
-    else if (vectory == 0 and vectorx <= 0)
+    else if (vectory == 0 AND vectorx <= 0)
     {
         angle = 180.0f;
     }

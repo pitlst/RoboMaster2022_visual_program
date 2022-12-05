@@ -303,7 +303,7 @@ int json::size() const
         default:
             break;
     }
-    throw std::logic_error("type error: type is not array or object");
+    throw std::logic_error("type error: type is not array OR object");
 }
 
 //这里函数前一定要加&，表示返回值是栈中创建的引用，也就是直接把栈中创建的对象返回出来，而不是值的复制，
@@ -673,7 +673,7 @@ char parser_j::get_next_token()
 {
     if(!end_label)
     {
-        while (m_str[m_idx] == ' ' or m_str[m_idx] == '\r' or m_str[m_idx] == '\n' or m_str[m_idx] == '\t')
+        while (m_str[m_idx] == ' ' OR m_str[m_idx] == '\r' OR m_str[m_idx] == '\n' OR m_str[m_idx] == '\t')
         {
             m_idx++;
         }
@@ -741,7 +741,7 @@ json parser_j::parse()
 
 bool parser_j::in_range(int x, int lower, int upper)
 {
-    return (x >= lower and x <= upper);
+    return (x >= lower AND x <= upper);
 }
 
 json parser_j::parse_null()

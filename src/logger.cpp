@@ -105,7 +105,7 @@ void logger::log(Level level, const std::string &input)
     {
         return;
     }
-    if (m_filename.empty() and !m_file.good())
+    if (m_filename.empty() AND !m_file.good())
     {
         throw std::logic_error("open log file failed: " + m_filename);
     }
